@@ -33,7 +33,7 @@ async function tryLoadData() {
       ticketsData = fullData.tickets || fullData;
       
       if (ticketsData && ticketsData.length > 0) {
-        console.log(`📦 Loaded ${ticketsData.length} tickets from file`);
+        console.log(`Loaded ${ticketsData.length} tickets from file`);
         return true;
       }
     }
@@ -49,7 +49,7 @@ async function tryLoadData() {
       ticketsData = fullData.tickets || fullData;
       
       if (ticketsData && ticketsData.length > 0) {
-        console.log(`📦 Loaded ${ticketsData.length} tickets from localStorage`);
+        console.log(`Loaded ${ticketsData.length} tickets from localStorage`);
         return true;
       }
     }
@@ -81,7 +81,7 @@ function startApp() {
   const savedTab = localStorage.getItem('mercadona_active_tab') || 'overview';
   switchTab(savedTab);
   
-  console.log('✅ Mercadona Stats initialized');
+  console.log('Mercadona Stats initialized');
 }
 
 // Update period info display
@@ -121,6 +121,28 @@ function setupDataLoaderHandlers() {
   const jsonDropzone = document.getElementById('jsonDropzone');
   const pdfDropzone = document.getElementById('pdfDropzone');
   const processBtn = document.getElementById('processPdfsBtn');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  const jsonConfirmBtn = document.getElementById('jsonConfirmBtn');
+  const jsonWarning = document.getElementById('jsonWarning');
+  
+  // Close modal button
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+      hideDataLoaderModal();
+      pendingJSONFile = null;
+      if (jsonWarning) jsonWarning.style.display = 'none';
+    });
+  }
+  
+  // JSON confirm button (accept replacement)
+  if (jsonConfirmBtn) {
+    jsonConfirmBtn.addEventListener('click', async () => {
+      if (pendingJSONFile) {
+        await processJSONFile(pendingJSONFile);
+        pendingJSONFile = null;
+      }
+    });
+  }
   
   // JSON file input
   if (jsonInput) {
@@ -188,9 +210,35 @@ function setupDropzone(dropzone, input, type) {
   dropzone.addEventListener('click', () => input?.click());
 }
 
+// Pending JSON file for confirmation
+let pendingJSONFile = null;
+
 // Handle JSON file upload
 async function handleJSONUpload(file) {
   const status = document.getElementById('jsonStatus');
+  const warning = document.getElementById('jsonWarning');
+  const warningText = warning?.querySelector('.warning-text');
+  
+  // Check if there are existing tickets and show warning
+  if (ticketsData && ticketsData.length > 0) {
+    pendingJSONFile = file;
+    if (warning && warningText) {
+      warningText.textContent = `Actualmente tienes ${ticketsData.length} tickets cargados. Subir este archivo JSON REEMPLAZARÁ todos los datos existentes.`;
+      warning.style.display = 'block';
+    }
+    return;
+  }
+  
+  await processJSONFile(file);
+}
+
+// Process JSON file (after confirmation if needed)
+async function processJSONFile(file) {
+  const status = document.getElementById('jsonStatus');
+  const warning = document.getElementById('jsonWarning');
+  
+  // Hide warning if visible
+  if (warning) warning.style.display = 'none';
   
   try {
     status.innerHTML = '<span class="loading-spinner"></span> Cargando...';
@@ -205,7 +253,7 @@ async function handleJSONUpload(file) {
       throw new Error('No se encontraron tickets en el archivo');
     }
     
-    status.innerHTML = `<span class="success">✅ ${ticketsData.length} tickets cargados</span>`;
+    status.innerHTML = `<span class="success">${ticketsData.length} tickets cargados correctamente</span>`;
     
     // Save to localStorage for persistence
     try {
@@ -220,7 +268,7 @@ async function handleJSONUpload(file) {
     }, 1000);
     
   } catch (error) {
-    status.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+    status.innerHTML = `<span class="error">Error: ${error.message}</span>`;
   }
 }
 
@@ -238,7 +286,7 @@ function updatePdfFileList(files) {
   listEl.innerHTML = `
     <p><strong>${files.length} archivo(s) seleccionado(s):</strong></p>
     <ul class="file-list">
-      ${Array.from(files).slice(0, 10).map(f => `<li>📄 ${f.name}</li>`).join('')}
+      ${Array.from(files).slice(0, 10).map(f => `<li>${f.name}</li>`).join('')}
       ${files.length > 10 ? `<li>... y ${files.length - 10} más</li>` : ''}
     </ul>
   `;
@@ -258,7 +306,7 @@ async function handlePDFProcess() {
   progressEl.style.display = 'block';
   
   try {
-    const tickets = await processPDFs(Array.from(files), (current, total, filename) => {
+    const newTickets = await processPDFs(Array.from(files), (current, total, filename) => {
       const percent = Math.round((current / total) * 100);
       progressEl.innerHTML = `
         <div class="progress-bar">
@@ -268,14 +316,24 @@ async function handlePDFProcess() {
       `;
     });
     
-    if (tickets.length === 0) {
+    if (newTickets.length === 0) {
       throw new Error('No se pudieron extraer tickets de los PDFs');
     }
     
-    fullData = buildTicketsData(tickets);
-    ticketsData = tickets;
+    // Merge with existing tickets, avoiding duplicates
+    const existingTickets = ticketsData || [];
+    const mergedTickets = mergeTickets(existingTickets, newTickets);
+    const addedCount = mergedTickets.length - existingTickets.length;
+    const duplicateCount = newTickets.length - addedCount;
     
-    progressEl.innerHTML = `<span class="success">✅ ${tickets.length} tickets extraídos de ${files.length} PDFs</span>`;
+    fullData = buildTicketsData(mergedTickets);
+    ticketsData = mergedTickets;
+    
+    let statusMsg = `${addedCount} tickets nuevos añadidos`;
+    if (duplicateCount > 0) {
+      statusMsg += ` (${duplicateCount} duplicados ignorados)`;
+    }
+    progressEl.innerHTML = `<span class="success">${statusMsg}</span>`;
     
     // Save to localStorage
     try {
@@ -289,7 +347,7 @@ async function handlePDFProcess() {
       progressEl.innerHTML += `
         <br><br>
         <button class="btn btn-secondary" onclick="downloadGeneratedJSON()">
-          📥 Descargar tickets.json
+          Descargar tickets.json
         </button>
       `;
     }, 500);
@@ -300,9 +358,30 @@ async function handlePDFProcess() {
     }, 2000);
     
   } catch (error) {
-    progressEl.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+    progressEl.innerHTML = `<span class="error">Error: ${error.message}</span>`;
     processBtn.disabled = false;
   }
+}
+
+// Merge tickets avoiding duplicates (by date + total + item count)
+function mergeTickets(existing, newTickets) {
+  const getTicketKey = (t) => `${t.date}_${t.total.toFixed(2)}_${(t.items || []).length}`;
+  
+  const existingKeys = new Set(existing.map(getTicketKey));
+  const merged = [...existing];
+  
+  for (const ticket of newTickets) {
+    const key = getTicketKey(ticket);
+    if (!existingKeys.has(key)) {
+      merged.push(ticket);
+      existingKeys.add(key);
+    }
+  }
+  
+  // Sort by date descending
+  merged.sort((a, b) => b.date.localeCompare(a.date));
+  
+  return merged;
 }
 
 // Download the generated JSON
@@ -398,27 +477,12 @@ function renderTab(tabId) {
   }
 }
 
-// Dark mode
+// Dark mode - auto detect from system preference
 function setupDarkMode() {
-  const toggle = document.getElementById('darkModeToggle');
   const savedTheme = localStorage.getItem('mercadona_theme');
   
   if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
     document.body.classList.add('dark-mode');
-    if (toggle) toggle.textContent = '☀️';
-  }
-  
-  if (toggle) {
-    toggle.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      const isDark = document.body.classList.contains('dark-mode');
-      toggle.textContent = isDark ? '☀️' : '🌙';
-      localStorage.setItem('mercadona_theme', isDark ? 'dark' : 'light');
-      
-      // Re-render current tab to update charts
-      const activeTab = localStorage.getItem('mercadona_active_tab') || 'overview';
-      renderTab(activeTab);
-    });
   }
 }
 

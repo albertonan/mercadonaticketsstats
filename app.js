@@ -22,7 +22,6 @@ async function init() {
   setupDOM();
   setupTabs();
   setupYearFilter();
-  setupDarkMode();
   setupExport();
   setupStoreFilter();
   setupProductSearch();
@@ -227,7 +226,7 @@ function renderMonthlySummary(months, data) {
   
   container.innerHTML = `
     <div class="alert alert-info">
-      <h4>📊 Resumen</h4>
+      <h4>Resumen</h4>
       <p>Mayor gasto: ${formatMonth(maxMonth)} (${formatCurrency(maxSpend)})</p>
       <p>Menor gasto: ${formatMonth(minMonth)} (${formatCurrency(minSpend)})</p>
     </div>
@@ -462,7 +461,7 @@ function renderCategoryList(totals, items) {
       <div class="category-item" data-category="${key}" style="cursor: pointer;">
         <div class="category-color" style="background: ${cat?.color || '#999'}"></div>
         <div class="category-info">
-          <div class="category-name">${cat?.icon || '📦'} ${cat?.name || key}</div>
+          <div class="category-name">${cat?.name || key}</div>
           <div class="category-desc">${percent}% del total${itemCount > 0 ? ` • ${itemCount} productos` : ''}</div>
         </div>
         <div class="category-value">
@@ -552,7 +551,6 @@ function renderCategoryProducts(categoryItems) {
     if (allProducts.length === 0) {
       container.innerHTML = `
         <div class="no-data" style="padding: 30px;">
-          <div class="no-data-icon">📦</div>
           <p>No hay productos para los filtros seleccionados</p>
           <p style="font-size: 0.8rem; color: var(--text-muted);">Solo los tickets con items detallados se muestran aquí</p>
         </div>
@@ -581,7 +579,7 @@ function renderCategoryProducts(categoryItems) {
               return `
                 <tr data-name="${p.name.toLowerCase()}">
                   <td><strong>${p.name}</strong></td>
-                  <td><span style="color: ${cat?.color || '#999'}">${cat?.icon || '📦'} ${cat?.name || p.category}</span></td>
+                  <td><span style="color: ${cat?.color || '#999'}">${cat?.name || p.category}</span></td>
                   <td>${p.quantity}</td>
                   <td>${formatCurrency(p.price)}</td>
                   <td><strong>${formatCurrency(p.total)}</strong></td>
@@ -680,7 +678,6 @@ function renderTopProductsChart(products) {
   if (products.length === 0) {
     ctx.parentElement.innerHTML = `
       <div class="no-data" style="height: 300px; display: flex; flex-direction: column; justify-content: center;">
-        <div class="no-data-icon">📊</div>
         <p>No hay datos de productos disponibles</p>
       </div>
     `;
@@ -731,7 +728,6 @@ function renderProductTable(products, totalTickets, ticketsWithItems, categories
   if (products.length === 0) {
     container.innerHTML = `
       <div class="no-data">
-        <div class="no-data-icon">📦</div>
         <p>No hay productos detallados disponibles</p>
         <p style="font-size: 0.8rem; color: var(--text-muted);">
           ${ticketsWithItems} de ${totalTickets} tickets tienen items detallados
@@ -746,7 +742,7 @@ function renderProductTable(products, totalTickets, ticketsWithItems, categories
   
   container.innerHTML = `
     <div class="alert alert-info" style="margin-bottom: 16px;">
-      <h4>📊 Resumen de productos</h4>
+      <h4>Resumen de productos</h4>
       <p>${products.length} productos únicos • ${totalItems} unidades • ${formatCurrency(totalSpent)} gastado</p>
       <p style="font-size: 0.75rem; color: var(--text-muted);">Datos de ${ticketsWithItems} tickets con items detallados</p>
     </div>
@@ -770,7 +766,7 @@ function renderProductTable(products, totalTickets, ticketsWithItems, categories
             return `
               <tr data-name="${p.name.toLowerCase()}">
                 <td><strong>${p.name}</strong></td>
-                <td><span style="color: ${cat?.color || '#999'}">${cat?.icon || '📦'}</span> ${cat?.name || p.category}</td>
+                <td><span style="color: ${cat?.color || '#999'}">${cat?.name || p.category}</span></td>
                 <td>${p.totalQty}</td>
                 <td>${formatCurrency(p.totalSpent / p.totalQty)}</td>
                 <td><strong>${formatCurrency(p.totalSpent)}</strong></td>
@@ -804,7 +800,6 @@ function renderPriceHistory() {
   if (!history || Object.keys(history).length === 0) {
     document.getElementById('priceHistoryContent').innerHTML = `
       <div class="no-data">
-        <div class="no-data-icon">📈</div>
         <p>No hay historial de precios disponible</p>
       </div>
     `;
@@ -873,11 +868,7 @@ function renderPriceSummary(changes) {
   
   container.innerHTML = `
     <div class="stat-card">
-      <div class="stat-icon" style="background: ${avgChange >= 0 ? 'linear-gradient(135deg, #f56565, #c53030)' : 'linear-gradient(135deg, #48bb78, #2f855a)'};">
-        ${avgChange >= 0 ? '📈' : '📉'}
-      </div>
-      <div class="stat-info">
-        <h3>Variación Media</h3>
+
         <p class="stat-value" style="color: ${avgChange >= 0 ? 'var(--danger)' : 'var(--success)'};">
           ${avgChange >= 0 ? '+' : ''}${avgChange.toFixed(1)}%
         </p>
@@ -886,7 +877,6 @@ function renderPriceSummary(changes) {
     </div>
     
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #f56565, #c53030);">📈</div>
       <div class="stat-info">
         <h3>Subidas de Precio</h3>
         <p class="stat-value">${increases.length}</p>
@@ -895,7 +885,6 @@ function renderPriceSummary(changes) {
     </div>
     
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #48bb78, #2f855a);">📉</div>
       <div class="stat-info">
         <h3>Bajadas de Precio</h3>
         <p class="stat-value">${decreases.length}</p>
@@ -904,7 +893,6 @@ function renderPriceSummary(changes) {
     </div>
     
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #5a67d8);">⚖️</div>
       <div class="stat-info">
         <h3>Precio Estable</h3>
         <p class="stat-value">${stable.length}</p>
@@ -914,7 +902,6 @@ function renderPriceSummary(changes) {
     
     ${topIncrease ? `
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #ed8936, #dd6b20);">🔥</div>
       <div class="stat-info">
         <h3>Mayor Subida</h3>
         <p class="stat-value" style="font-size: 1rem;">${truncate(topIncrease.product, 25)}</p>
@@ -925,7 +912,6 @@ function renderPriceSummary(changes) {
     
     ${topDecrease ? `
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #4299e1, #3182ce);">💰</div>
       <div class="stat-info">
         <h3>Mayor Bajada</h3>
         <p class="stat-value" style="font-size: 1rem;">${truncate(topDecrease.product, 25)}</p>
@@ -1081,7 +1067,7 @@ function renderPriceChangeTable(changes) {
         <tbody>
           ${changes.map(p => {
             const changeClass = p.change > 0 ? 'increase' : (p.change < 0 ? 'decrease' : 'same');
-            const changeIcon = p.change > 0 ? '📈' : (p.change < 0 ? '📉' : '➖');
+            const changeIcon = p.change > 0 ? '↑' : (p.change < 0 ? '↓' : '•');
             return `
               <tr class="price-row" data-product="${p.product}">
                 <td>${p.product}</td>
@@ -1167,7 +1153,6 @@ function showError(message) {
   document.body.innerHTML = `
     <div class="container">
       <div class="card" style="text-align: center; padding: 40px;">
-        <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
         <h2>Error</h2>
         <p style="color: var(--text-secondary);">${message}</p>
       </div>
@@ -1179,29 +1164,6 @@ function showError(message) {
 // DARK MODE
 // ============================================
 let currentStore = 'all';
-
-function setupDarkMode() {
-  const btn = document.getElementById('darkModeToggle');
-  if (!btn) return;
-  
-  // Check saved preference
-  if (localStorage.getItem('darkMode') === 'true') {
-    document.body.classList.add('dark-mode');
-    btn.textContent = '☀️';
-  }
-  
-  btn.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    btn.textContent = isDark ? '☀️' : '🌙';
-    localStorage.setItem('darkMode', isDark);
-    
-    // Re-render charts with updated colors
-    Object.values(charts).forEach(chart => {
-      if (chart) chart.update();
-    });
-  });
-}
 
 // ============================================
 // EXPORT FUNCTIONALITY
@@ -1221,13 +1183,13 @@ function showExportModal() {
   modal.innerHTML = `
     <div class="modal-content">
       <span class="modal-close">&times;</span>
-      <h3>📥 Exportar Datos</h3>
+      <h3>Exportar Datos</h3>
       <p style="margin: 16px 0; color: var(--text-secondary);">
         Exportar ${tickets.length} tickets del período seleccionado
       </p>
       <div class="stats-grid">
-        <button class="btn-small" onclick="exportCSV()">📄 Exportar CSV</button>
-        <button class="btn-small" onclick="exportSummary()">📊 Resumen TXT</button>
+        <button class="btn-small" onclick="exportCSV()">Exportar CSV</button>
+        <button class="btn-small" onclick="exportSummary()">Resumen TXT</button>
       </div>
     </div>
   `;
@@ -1762,7 +1724,7 @@ function showTicketDetail(id) {
       
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
         <div>
-          <h3 style="margin: 0;">🧾 Ticket</h3>
+          <h3 style="margin: 0;">Ticket</h3>
           <p style="color: var(--text-secondary); margin: 4px 0 0 0;">
             ${store.city || 'Mercadona'}${store.address ? ` - ${store.address}` : ''}
           </p>
@@ -1812,8 +1774,8 @@ function showTicketDetail(id) {
       </div>
       
       <div style="margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end;">
-        <button class="btn-small" onclick="compareTicket('${ticket.id}')">📊 Comparar</button>
-        <button class="btn-small" onclick="copyTicketToClipboard('${ticket.id}')">📋 Copiar</button>
+        <button class="btn-small" onclick="compareTicket('${ticket.id}')">Comparar</button>
+        <button class="btn-small" onclick="copyTicketToClipboard('${ticket.id}')">Copiar</button>
       </div>
     </div>
   `;
@@ -1824,18 +1786,7 @@ function showTicketDetail(id) {
 }
 
 function getCategoryEmoji(category) {
-  const emojis = {
-    'proteinas': '🥩',
-    'frutas_verduras': '🥬',
-    'lacteos': '🧀',
-    'despensa': '🥫',
-    'bebidas': '🥤',
-    'congelados': '🧊',
-    'higiene_limpieza': '🧴',
-    'dulces_snacks': '🍪',
-    'otros': '📦'
-  };
-  return emojis[category] || '📦';
+  return '';
 }
 
 function compareTicket(id) {
@@ -2019,28 +1970,24 @@ function renderShoppingHabits() {
   
   container.innerHTML = `
     <div class="habit-card">
-      <div class="habit-icon">🛒</div>
       <div class="habit-content">
         <h4>Producto favorito</h4>
         <p>${topProduct ? `${topProduct[0]} (${topProduct[1]}x)` : 'Sin datos'}</p>
       </div>
     </div>
     <div class="habit-card">
-      <div class="habit-icon">📦</div>
       <div class="habit-content">
         <h4>Productos por compra</h4>
         <p>${avgItems.toFixed(1)} productos de media</p>
       </div>
     </div>
     <div class="habit-card">
-      <div class="habit-icon">📅</div>
       <div class="habit-content">
         <h4>Día preferido</h4>
         <p>${favoriteDay}</p>
       </div>
     </div>
     <div class="habit-card">
-      <div class="habit-icon">🏷️</div>
       <div class="habit-content">
         <h4>Categoría top</h4>
         <p>${topCategory ? topCategory[0] : 'Sin categorizar'}</p>
@@ -2167,7 +2114,7 @@ function updateBudgetProgress(budget) {
       <span class="progress-text">${percentage.toFixed(0)}%</span>
     </div>
     <p style="margin-top: 12px; color: ${remaining >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: 600;">
-      ${remaining >= 0 ? `✓ Te quedan ${formatCurrency(remaining)} este mes` : `⚠️ Te has pasado ${formatCurrency(Math.abs(remaining))}`}
+      ${remaining >= 0 ? `Te quedan ${formatCurrency(remaining)} este mes` : `Te has pasado ${formatCurrency(Math.abs(remaining))}`}
     </p>
     <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
       <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: var(--text-secondary);">
@@ -2367,11 +2314,10 @@ function renderSavingsOpportunities() {
   container.innerHTML = opportunities.length > 0 ? 
     opportunities.slice(0, 6).map(opp => `
       <div class="habit-card" style="border-left: 4px solid ${opp.type === 'price-variation' ? 'var(--warning)' : opp.type === 'consolidation' ? 'var(--info)' : 'var(--primary)'};">
-        <div class="habit-icon">${opp.type === 'price-variation' ? '💰' : opp.type === 'consolidation' ? '🛒' : '📊'}</div>
         <div class="habit-content">
           <h4>${opp.name}</h4>
           <p style="font-size: 0.875rem; color: var(--text-secondary);">${opp.message}</p>
-          <p style="font-size: 0.75rem; color: var(--success); margin-top: 4px;">💡 ${opp.tip}</p>
+          <p style="font-size: 0.75rem; color: var(--success); margin-top: 4px;">${opp.tip}</p>
         </div>
       </div>
     `).join('') :

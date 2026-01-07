@@ -1,52 +1,83 @@
 <!-- Insights Tab Content -->
-<!-- Price Alerts -->
-<div class="chart-container">
-  <h3>🚨 Alertas de Precio</h3>
-  <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 16px;">
-    Productos con cambios de precio significativos
-  </p>
-  <div id="priceAlerts"></div>
-</div>
+<div class="insights-dashboard">
+    <!-- Top Row -->
+    <div class="insight-card price-alerts-card">
+        <h3>Alertas de Precios Importantes</h3>
+        <div id="priceAlertsList" class="alerts-container"></div>
+    </div>
 
-<!-- Spending Prediction -->
-<div class="chart-container">
-  <h3>🔮 Predicción de Gasto</h3>
-  <div id="predictions" class="prediction-box"></div>
-</div>
+    <div class="insight-card prediction-card">
+        <h3>Predicción de Gasto Mensual</h3>
+        <div class="prediction-content">
+            <div id="predictionBadge" class="prediction-badge">
+                Proyección Enero: 450€ - 480€
+            </div>
+            <div class="chart-wrapper-small">
+                <canvas id="predictionChart"></canvas>
+            </div>
+        </div>
+    </div>
 
-<!-- Shopping Habits -->
-<div class="chart-container">
-  <h3>🧠 Hábitos de Compra</h3>
-  <div id="habitsGrid" class="habits-grid"></div>
-</div>
+    <div class="insight-card budget-card">
+        <h3>Seguimiento de Presupuesto</h3>
+        <div class="budget-content">
+            <div class="budget-chart-container">
+                <canvas id="budgetChart"></canvas>
+                <div class="budget-center-text">
+                    <span id="budgetPercent">72%</span>
+                    <span id="budgetTotal" class="budget-sub">720€ / 1000€</span>
+                    <span class="budget-label">Gasto Total</span>
+                </div>
+            </div>
+            <p class="budget-status">En camino para cumplir el objetivo</p>
+        </div>
+    </div>
 
-<!-- Budget Tracker -->
-<div class="chart-container">
-  <h3>💳 Control de Presupuesto
-    <input type="number" id="budgetInput" placeholder="€/mes" style="margin-left: 16px; padding: 4px 12px; border-radius: 4px; border: 1px solid #e2e8f0; width: 120px;">
-    <button id="setBudgetBtn" class="btn-small">Establecer</button>
-  </h3>
-  <div id="budgetProgress"></div>
-</div>
+    <!-- Middle Row -->
+    <div class="insight-card habits-card">
+        <h3>Hábitos de Compra</h3>
+        <div class="habits-container">
+            <div class="habit-box">
+                <span class="habit-label">Momento Favorito</span>
+                <div class="habit-value-row">
+                    <span id="favDay">Viernes</span>
+                </div>
+                <div class="habit-value-row">
+                    <span id="favTime">18:00 - 19:00</span>
+                </div>
+            </div>
+            <div class="habit-box">
+                <span class="habit-label">Intervalo Medio entre Compras</span>
+                <div class="habit-big-value">
+                    <span id="avgInterval">7.5</span> <span class="unit">Días</span>
+                </div>
+                <div class="habit-trend">
+                    <span id="intervalTrend">Similar al mes pasado</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- Shopping Patterns -->
-<div class="chart-container">
-  <h3>📊 Patrones de Compra</h3>
-  <div class="chart-wrapper">
-    <canvas id="shoppingPatternsChart"></canvas>
-  </div>
-</div>
+    <div class="insight-card heatmap-card">
+        <h3>Patrones de Compra (Mapa de Calor)</h3>
+        <div class="heatmap-wrapper">
+             <div class="heatmap-labels-y">
+                <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+             </div>
+             <div id="heatmapGrid" class="heatmap-grid"></div>
+             <div class="heatmap-labels-x">
+                <span>8h</span><span></span><span></span><span></span><span>12h</span><span></span><span></span><span></span><span>16h</span><span></span><span></span><span></span><span>20h</span><span></span>
+             </div>
+        </div>
+    </div>
 
-<!-- Savings Opportunities -->
-<div class="chart-container">
-  <h3>💡 Oportunidades de Ahorro</h3>
-  <div id="savingsOpportunities"></div>
+    <!-- Bottom Row -->
+    <div class="insight-card savings-card">
+        <h3>Oportunidades de Ahorro Detectadas</h3>
+        <div id="savingsGrid" class="savings-grid">
+            <!-- Dynamic content will be injected here -->
+        </div>
+    </div>
 </div>
-
-<!-- Category Trends -->
-<div class="chart-container">
-  <h3>📈 Tendencias por Categoría</h3>
-  <div class="chart-wrapper">
-    <canvas id="categoryTrendsChart"></canvas>
   </div>
 </div>

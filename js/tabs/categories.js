@@ -39,7 +39,7 @@ function renderCategories() {
 }
 
 function renderCategoryChart(sortedCategories, totalSpent) {
-  const labels = sortedCategories.map(([cat]) => cat);
+  const labels = sortedCategories.map(([cat]) => formatCategoryName(cat));
   const data = sortedCategories.map(([_, d]) => d.total);
   const colors = sortedCategories.map((_, i) => getCategoryColor(i));
   
@@ -62,7 +62,7 @@ function renderCategoryList(sortedCategories, totalSpent) {
         <div class="category-color" style="background: ${getCategoryColor(index)}"></div>
         <div class="category-info">
           <div class="category-name">
-            ${getCategoryEmoji(cat)} ${cat}
+            ${getCategoryEmoji(cat)} ${formatCategoryName(cat)}
           </div>
           <div class="category-desc">${data.count} productos</div>
         </div>
@@ -94,7 +94,7 @@ function renderCategoryMonthlyChart(tickets) {
   const categories = [...new Set(tickets.flatMap(t => (t.items || []).map(i => i.category || 'otros')))];
   
   const datasets = categories.map((cat, i) => ({
-    label: cat,
+    label: formatCategoryName(cat),
     data: months.map(m => monthlyCategories[m][cat] || 0),
     backgroundColor: getCategoryColor(i),
     borderRadius: 4
@@ -115,7 +115,7 @@ function setupCategoryProductFilter(sortedCategories, tickets) {
   
   // Populate category filter
   categoryFilter.innerHTML = '<option value="all">Todas las categorías</option>' +
-    sortedCategories.map(([cat]) => `<option value="${cat}">${getCategoryEmoji(cat)} ${cat}</option>`).join('');
+    sortedCategories.map(([cat]) => `<option value="${cat}">${getCategoryEmoji(cat)} ${formatCategoryName(cat)}</option>`).join('');
   
   // Populate month filter
   const months = [...new Set(tickets.map(t => t.date.substring(0, 7)))].sort().reverse();

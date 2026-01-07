@@ -67,28 +67,24 @@ function renderPriceSummary(variations) {
   
   container.innerHTML = `
     <div class="stat-card">
-      <span class="stat-icon">📈</span>
       <div class="stat-content">
         <div class="stat-label">Subieron precio</div>
         <div class="stat-value">${increased}</div>
       </div>
     </div>
     <div class="stat-card">
-      <span class="stat-icon">📉</span>
       <div class="stat-content">
         <div class="stat-label">Bajaron precio</div>
         <div class="stat-value">${decreased}</div>
       </div>
     </div>
     <div class="stat-card">
-      <span class="stat-icon">➡️</span>
       <div class="stat-content">
         <div class="stat-label">Estables</div>
         <div class="stat-value">${stable}</div>
       </div>
     </div>
     <div class="stat-card">
-      <span class="stat-icon">📊</span>
       <div class="stat-content">
         <div class="stat-label">Variación media</div>
         <div class="stat-value ${avgVariation > 0 ? 'text-danger' : avgVariation < 0 ? 'text-success' : ''}">${avgVariation > 0 ? '+' : ''}${avgVariation.toFixed(1)}%</div>

@@ -5,7 +5,7 @@
 function renderOverview() {
   const tickets = getFilteredTickets();
   if (tickets.length === 0) {
-    document.getElementById('tabContent').innerHTML = '<div class="no-data"><div class="no-data-icon">📊</div><p>No hay datos disponibles</p></div>';
+    document.getElementById('tabContent').innerHTML = '<div class="no-data"><p>No hay datos disponibles</p></div>';
     return;
   }
   

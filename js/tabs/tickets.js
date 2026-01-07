@@ -65,28 +65,24 @@ function renderTicketsStats(tickets) {
   
   container.innerHTML = `
     <div class="stat-card">
-      <span class="stat-icon">🧾</span>
       <div class="stat-content">
         <div class="stat-label">Total tickets</div>
         <div class="stat-value">${tickets.length}</div>
       </div>
     </div>
     <div class="stat-card">
-      <span class="stat-icon">💰</span>
       <div class="stat-content">
         <div class="stat-label">Gasto total</div>
         <div class="stat-value">${formatCurrency(total)}</div>
       </div>
     </div>
     <div class="stat-card">
-      <span class="stat-icon">📊</span>
       <div class="stat-content">
         <div class="stat-label">Media por ticket</div>
         <div class="stat-value">${formatCurrency(avgTicket)}</div>
       </div>
     </div>
     <div class="stat-card">
-      <span class="stat-icon">🏆</span>
       <div class="stat-content">
         <div class="stat-label">Ticket más alto</div>
         <div class="stat-value">${formatCurrency(maxTicket)}</div>
@@ -156,8 +152,8 @@ function updateTicketsList(tickets) {
             <div class="ticket-total">${formatCurrency(t.total)}</div>
           </div>
           <div class="ticket-info">
-            <div class="ticket-store">📍 ${t.store || 'Mercadona'}</div>
-            <div class="ticket-items">📦 ${t.items?.length || 0} productos</div>
+            <div class="ticket-store">${t.store || 'Mercadona'}</div>
+            <div class="ticket-items">${t.items?.length || 0} productos</div>
           </div>
           <div class="ticket-preview">
             ${(t.items || []).slice(0, 3).map(i => `<span class="preview-item">${truncate(i.name, 15)}</span>`).join('')}
@@ -246,15 +242,15 @@ function showTicketDetail(index) {
   
   content.innerHTML = `
     <div class="modal-header">
-      <h2>🧾 Ticket del ${formatDate(ticket.date)}</h2>
+      <h2>Ticket del ${formatDate(ticket.date)}</h2>
       <button class="modal-close" onclick="closeTicketModal()">×</button>
     </div>
     <div class="modal-body">
       <div class="ticket-detail-header">
         <div class="detail-info">
-          <p><strong>📍 Tienda:</strong> ${ticket.store || 'Mercadona'}</p>
-          <p><strong>🕐 Hora:</strong> ${ticket.time || 'N/A'}</p>
-          <p><strong>📦 Productos:</strong> ${ticket.items?.length || 0}</p>
+          <p><strong>Tienda:</strong> ${ticket.store || 'Mercadona'}</p>
+          <p><strong>Hora:</strong> ${ticket.time || 'N/A'}</p>
+          <p><strong>Productos:</strong> ${ticket.items?.length || 0}</p>
         </div>
         <div class="detail-total">
           <span class="total-label">Total</span>
@@ -280,7 +276,8 @@ function showTicketDetail(index) {
       </div>
       
       <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="copyTicketToClipboard(${index})">📋 Copiar</button>
+        <button class="btn btn-danger" onclick="deleteTicket(${index})">Borrar ticket</button>
+        <button class="btn btn-secondary" onclick="copyTicketToClipboard(${index})">Copiar</button>
         <button class="btn btn-primary" onclick="closeTicketModal()">Cerrar</button>
       </div>
     </div>
@@ -295,6 +292,73 @@ function closeTicketModal() {
   if (modal) {
     modal.classList.remove('active');
     document.body.style.overflow = '';
+  }
+}
+
+function deleteTicket(index) {
+  const tickets = getFilteredTickets();
+  let filtered = tickets;
+  if (ticketsSearch) {
+    const query = ticketsSearch.toLowerCase();
+    filtered = tickets.filter(t => 
+      t.store?.toLowerCase().includes(query) ||
+      t.date?.includes(query) ||
+      t.items?.some(i => i.name?.toLowerCase().includes(query))
+    );
+  }
+  
+  switch(ticketsSort) {
+    case 'date-asc':
+      filtered.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+      break;
+    case 'total-desc':
+      filtered.sort((a, b) => b.total - a.total);
+      break;
+    case 'total-asc':
+      filtered.sort((a, b) => a.total - b.total);
+      break;
+    case 'items-desc':
+      filtered.sort((a, b) => (b.items?.length || 0) - (a.items?.length || 0));
+      break;
+    default:
+      filtered.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
+  }
+  
+  const ticket = filtered[index];
+  if (!ticket) return;
+  
+  if (!confirm(`¿Estás seguro de que quieres borrar el ticket del ${formatDate(ticket.date)} (${formatCurrency(ticket.total)})?`)) {
+    return;
+  }
+  
+  // Find and remove from ticketsData
+  const ticketIndex = ticketsData.findIndex(t => 
+    t.date === ticket.date && t.time === ticket.time && t.total === ticket.total
+  );
+  
+  if (ticketIndex !== -1) {
+    ticketsData.splice(ticketIndex, 1);
+    
+    // Update fullData
+    if (fullData) {
+      if (fullData.tickets) {
+        fullData.tickets = ticketsData;
+      } else {
+        fullData = ticketsData;
+      }
+    }
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('mercadona_tickets_data', JSON.stringify(fullData));
+    } catch (e) {
+      console.warn('Could not save to localStorage');
+    }
+    
+    // Close modal and refresh
+    closeTicketModal();
+    renderTicketsList();
+    updatePeriodInfo();
   }
 }
 

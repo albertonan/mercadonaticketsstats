@@ -18,7 +18,7 @@ function formatLocalDate(year, month, day) {
 const CATEGORIES_CONFIG = {
   proteinas: {
     name: "Proteínas",
-    icon: "🥩",
+    icon: "",
     color: "#e74c3c",
     keywords: ["PECHUGA", "POLLO", "PAVO", "CERDO", "TERNERA", "BURGER", "JAMÓN", "JAMON", 
               "CECINA", "SALMON", "SALMÓN", "HUEVO", "HUEVOS", "CHULETA", "CONTRAMUSLO",
@@ -31,7 +31,7 @@ const CATEGORIES_CONFIG = {
   },
   lacteos: {
     name: "Lácteos",
-    icon: "🧀",
+    icon: "",
     color: "#f39c12",
     keywords: ["LECHE", "QUESO", "YOGUR", "KÉFIR", "KEFIR", "COTTAGE", "MOZZARELLA",
               "MANTEQUILLA", "NATA", "BURRATA", "FETA", "GRIEGO", "BÍFIDUS", "BIFIDUS",
@@ -39,7 +39,7 @@ const CATEGORIES_CONFIG = {
   },
   frutas_verduras: {
     name: "Frutas y Verduras",
-    icon: "🥬",
+    icon: "",
     color: "#27ae60",
     keywords: ["TOMATE", "CEBOLLA", "ZANAHORIA", "PLATANO", "PLÁTANO", "BANANA", "MANGO",
               "KIWI", "MANZANA", "PERA", "NARANJA", "MANDARINA", "LIMON", "LIMÓN",
@@ -54,7 +54,7 @@ const CATEGORIES_CONFIG = {
   },
   bebidas: {
     name: "Bebidas",
-    icon: "🥤",
+    icon: "",
     color: "#3498db",
     keywords: ["COLA", "AGUA", "CERVEZA", "ZUMO", "CAFÉ", "CAFE", "TÓNICA", "TONICA",
               "SPRITE", "LIMONADA", "ISOTONIC", "ENERG", "RADLER", "VINO", "GINEBRA",
@@ -62,7 +62,7 @@ const CATEGORIES_CONFIG = {
   },
   congelados: {
     name: "Congelados",
-    icon: "🧊",
+    icon: "",
     color: "#9b59b6",
     keywords: ["PIZZA", "NUGGETS", "LASAÑA", "LASANA", "EMPANADA", "CANELONES", "CANELON",
               "CANELÓN", "WAFFLE", "PATATAS GAJO", "PATATAS HORNO", "TEQUEÑOS", "TEMPURA",
@@ -71,7 +71,7 @@ const CATEGORIES_CONFIG = {
   },
   despensa: {
     name: "Despensa",
-    icon: "🍚",
+    icon: "",
     color: "#1abc9c",
     keywords: ["ARROZ", "PASTA", "MACARRON", "SPAGHETTI", "PENNE", "HELICES", "PAJARITAS",
               "FIDEOS", "FIDEO", "ACEITE", "TOMATE FRITO", "TOMATE TRITURADO", "SAL",
@@ -84,7 +84,7 @@ const CATEGORIES_CONFIG = {
   },
   dulces_snacks: {
     name: "Dulces y Snacks",
-    icon: "🍫",
+    icon: "",
     color: "#e67e22",
     keywords: ["CHOCOLATE", "CHOCO", "GALLETA", "CROISSANT", "BERLINA", "BOMBON",
               "TURRON", "TURRÓN", "POLVORON", "POLVORÓN", "GOLOSINA", "GOMINOLA",
@@ -96,7 +96,7 @@ const CATEGORIES_CONFIG = {
   },
   higiene_limpieza: {
     name: "Higiene y Limpieza",
-    icon: "🧴",
+    icon: "",
     color: "#95a5a6",
     keywords: ["PAPEL", "JABÓN", "JABON", "DETERGENTE", "GEL", "CHAMPÚ", "CHAMPU",
               "DEO", "DESODORANTE", "CEPILLO", "PASTA DENT", "COLG", "ENJUAGUE",
@@ -109,7 +109,7 @@ const CATEGORIES_CONFIG = {
   },
   otros: {
     name: "Otros",
-    icon: "📦",
+    icon: "",
     color: "#7f8c8d",
     keywords: []
   }
@@ -178,8 +178,8 @@ function parseTicketsFromText(text) {
     const trimmedBlock = block.trim();
     if (!trimmedBlock) continue;
     
-    // Skip PDF filename headers
-    if (trimmedBlock.startsWith('📄')) continue;
+    // Skip PDF filename headers (may start with emoji or text)
+    if (trimmedBlock.startsWith('PDF:') || /^[\p{Emoji}]/u.test(trimmedBlock.charAt(0))) continue;
     
     const lines = trimmedBlock.split('\n');
     

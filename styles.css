@@ -556,7 +556,7 @@ body.dark-mode #priceChangeTable .price-row:hover {
 }
 
 .search-box::before {
-  content: '🔍';
+  content: '';
   position: absolute;
   left: 16px;
   top: 50%;

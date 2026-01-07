@@ -23,6 +23,14 @@ function formatCurrency(value) {
   }).format(value);
 }
 
+// Format category name (capitalize and replace underscores)
+function formatCategoryName(cat) {
+  if (!cat) return 'Otros';
+  return cat
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
 // Format month (YYYY-MM -> "Mes Año")
 function formatMonth(yearMonth) {
   if (!yearMonth) return '-';
@@ -58,20 +66,9 @@ function debounce(fn, delay) {
   };
 }
 
-// Get category emoji
+// Get category emoji - returns empty string now (emojis removed)
 function getCategoryEmoji(category) {
-  const emojis = {
-    'proteinas': '🥩',
-    'frutas_verduras': '🥬',
-    'lacteos': '🧀',
-    'despensa': '🥫',
-    'bebidas': '🥤',
-    'congelados': '🧊',
-    'higiene_limpieza': '🧴',
-    'dulces_snacks': '🍪',
-    'otros': '📦'
-  };
-  return emojis[category] || '📦';
+  return '';
 }
 
 // Get category color
@@ -89,7 +86,6 @@ function showError(message) {
   if (container) {
     container.innerHTML = `
       <div class="chart-container" style="text-align: center; padding: 40px;">
-        <div style="font-size: 3rem; margin-bottom: 16px;">⚠️</div>
         <h2>Error</h2>
         <p style="color: var(--text-secondary);">${message}</p>
       </div>
