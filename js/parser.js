@@ -3,6 +3,17 @@
    Replica la lógica de parse_tickets.py
    ============================================ */
 
+/**
+ * Format a date as YYYY-MM-DD in local timezone (not UTC)
+ * Avoids timezone issues with toISOString() which converts to UTC
+ */
+function formatLocalDate(year, month, day) {
+  const y = String(year).padStart(4, '0');
+  const m = String(month).padStart(2, '0');
+  const d = String(day).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 // Categories configuration (same as Python)
 const CATEGORIES_CONFIG = {
   proteinas: {
@@ -182,7 +193,7 @@ function parseTicketsFromText(text) {
       const dateStr = dateMatch[1];
       const timeStr = dateMatch[2];
       const [day, month, year] = dateStr.split('/');
-      const dateObj = new Date(year, month - 1, day);
+      const formattedDate = formatLocalDate(year, month, day);
       
       const invoiceId = invoiceMatch[1];
       
@@ -257,7 +268,7 @@ function parseTicketsFromText(text) {
       
       const ticket = {
         id: invoiceId,
-        date: dateObj.toISOString().split('T')[0],
+        date: formattedDate,
         time: timeStr,
         total: total,
         store: store.name,
@@ -330,7 +341,7 @@ function parseSinglePDFText(text, filename) {
   const dateStr = dateMatch[1];
   const timeStr = dateMatch[2];
   const [day, month, year] = dateStr.split('/');
-  const dateObj = new Date(year, month - 1, day);
+  const formattedDate = formatLocalDate(year, month, day);
   
   // Invoice ID
   let invoiceId = invoiceMatch ? invoiceMatch[1] : `PDF-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -435,7 +446,7 @@ function parseSinglePDFText(text, filename) {
   
   return {
     id: invoiceId,
-    date: dateObj.toISOString().split('T')[0],
+    date: formattedDate,
     time: timeStr,
     total: total,
     store: store.name,
