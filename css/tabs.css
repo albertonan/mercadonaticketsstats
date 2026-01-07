@@ -1,0 +1,883 @@
+/* ============================================
+   MERCADONA STATS - TAB SPECIFIC STYLES
+   ============================================ */
+
+/* ========== STATS GRID (shared) ========== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: white;
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--card-shadow);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.stat-card .stat-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.stat-card .stat-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-card .stat-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.stat-card .stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+/* ========== CATEGORIES TAB ========== */
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-radius: var(--border-radius-sm);
+  background: #f7fafc;
+  transition: transform 0.2s;
+}
+
+.category-item:hover {
+  transform: translateX(4px);
+}
+
+.category-color {
+  width: 8px;
+  height: 48px;
+  border-radius: 4px;
+  margin-right: 16px;
+}
+
+.category-info {
+  flex: 1;
+}
+
+.category-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.category-value {
+  font-weight: 700;
+  color: var(--info);
+  text-align: right;
+}
+
+.category-percent {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* ========== PRODUCTS TAB ========== */
+.product-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.product-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f7fafc;
+  border-radius: var(--border-radius-sm);
+  transition: background 0.2s;
+}
+
+.product-item:hover {
+  background: #edf2f7;
+}
+
+.product-icon {
+  font-size: 1.5rem;
+  margin-right: 12px;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.product-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.product-price {
+  font-weight: 700;
+  color: var(--info);
+}
+
+#searchResults {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#searchResults:empty::after {
+  content: 'Escribe para buscar productos...';
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  display: block;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ========== PRICES TAB ========== */
+.price-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.price-change.increase {
+  background: #fff5f5;
+  color: #c53030;
+}
+
+.price-change.decrease {
+  background: #f0fff4;
+  color: #276749;
+}
+
+.price-change.same {
+  background: #f7fafc;
+  color: var(--text-secondary);
+}
+
+#prices .stats-grid {
+  margin-bottom: 24px;
+}
+
+#priceChangeTable .table-container {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+#priceChangeTable table {
+  width: 100%;
+}
+
+#priceChangeTable th,
+#priceChangeTable td {
+  padding: 12px 16px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+#priceChangeTable th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+#priceChangeTable td:nth-child(2),
+#priceChangeTable td:nth-child(3) {
+  white-space: nowrap;
+}
+
+#priceChangeTable td:last-child {
+  text-align: right;
+}
+
+#priceChangeTable .price-row:hover {
+  background: #edf2f7;
+}
+
+#priceChangeTable small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  margin-top: 2px;
+}
+
+/* ========== TICKETS TAB ========== */
+.ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.ticket-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: #f7fafc;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 4px solid var(--primary);
+}
+
+.ticket-item:hover {
+  transform: translateX(4px);
+  box-shadow: var(--card-shadow);
+}
+
+.ticket-date {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ticket-store {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.ticket-total {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--info);
+  margin-left: auto;
+}
+
+.ticket-items-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 16px;
+}
+
+#ticketSearch {
+  font-size: 0.875rem;
+}
+
+#ticketPagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Stat card compact */
+.stat-card.compact {
+  padding: 12px 16px;
+}
+
+.stat-card.compact .stat-info h3 {
+  font-size: 0.75rem;
+  margin-bottom: 2px;
+}
+
+.stat-card.compact .stat-value {
+  font-size: 1.1rem;
+}
+
+/* ========== INSIGHTS TAB ========== */
+.comparison-section {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--card-shadow);
+}
+
+.comparison-section h3 {
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.comparison-card {
+  text-align: center;
+  padding: 16px;
+  background: #f7fafc;
+  border-radius: var(--border-radius-sm);
+}
+
+.comparison-card .label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.comparison-card .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 8px 0;
+}
+
+.comparison-card .change {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.comparison-card .change.positive { color: var(--danger); }
+.comparison-card .change.negative { color: var(--success); }
+
+.prediction-box {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.prediction-card {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  padding: 20px;
+  border-radius: var(--border-radius-sm);
+  text-align: center;
+}
+
+.prediction-value {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.prediction-label {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.habits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.habit-card {
+  background: #f7fafc;
+  padding: 16px;
+  border-radius: var(--border-radius-sm);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.habit-icon {
+  font-size: 2rem;
+}
+
+.habit-content h4 {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.habit-content p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.alert-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #fff5f5;
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 8px;
+  border-left: 4px solid var(--danger);
+}
+
+.alert-item.decrease,
+.alert-item.alert-decrease {
+  background: #f0fff4;
+  border-color: var(--success);
+}
+
+.alert-item.alert-increase {
+  background: #fff5f5;
+  border-color: var(--danger);
+}
+
+.alert-item .product-name {
+  flex: 1;
+}
+
+.alert-item .price-info {
+  text-align: right;
+}
+
+.alert-item .old-price {
+  text-decoration: line-through;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.alert-item .new-price {
+  font-weight: 700;
+}
+
+#savingsOpportunities {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+#savingsOpportunities .habit-card {
+  margin: 0;
+}
+
+/* ========== TICKETS GRID ========== */
+.ticket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.ticket-card {
+  background: white;
+  border-radius: var(--border-radius-sm);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid #e2e8f0;
+}
+
+.ticket-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--primary);
+}
+
+.ticket-card .ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.ticket-card .ticket-date .date-day {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.ticket-card .ticket-date .date-month {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: block;
+}
+
+.ticket-card .ticket-total {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--info);
+}
+
+.ticket-card .ticket-info {
+  display: flex;
+  gap: 16px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.ticket-card .ticket-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ticket-card .preview-item {
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.ticket-card .preview-more {
+  background: var(--primary);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.page-info {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* ========== INSIGHTS EXTRA ========== */
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alert-item .alert-icon {
+  font-size: 1.5rem;
+  margin-right: 12px;
+}
+
+.alert-item .alert-content {
+  flex: 1;
+}
+
+.alert-item .alert-name {
+  font-weight: 600;
+}
+
+.alert-item .alert-detail {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.alert-item .alert-change {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* Prediction Cards */
+.prediction-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.prediction-card {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.prediction-card .prediction-icon {
+  font-size: 2.5rem;
+}
+
+.prediction-card .prediction-content {
+  flex: 1;
+}
+
+.prediction-card .prediction-label {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.prediction-card .prediction-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.prediction-card .prediction-trend,
+.prediction-card .prediction-detail {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+/* Habits Grid */
+.habit-card .habit-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.habit-card .habit-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.habit-card .habit-detail {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Patterns Section */
+.patterns-section h4 {
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.pairs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pair-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f7fafc;
+  border-radius: var(--border-radius-sm);
+}
+
+.pair-names {
+  font-size: 0.875rem;
+}
+
+.pair-count {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* Savings List */
+.savings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.savings-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f0fff4;
+  border-radius: var(--border-radius-sm);
+  border-left: 4px solid var(--success);
+}
+
+.savings-name {
+  font-weight: 500;
+}
+
+.savings-detail {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.savings-potential {
+  text-align: right;
+}
+
+.savings-amount {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.savings-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--success);
+}
+
+/* Budget Tracker */
+.budget-header {
+  margin-bottom: 20px;
+}
+
+.budget-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.budget-input-group input {
+  width: 100px;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+}
+
+.budget-progress {
+  margin-bottom: 20px;
+}
+
+.budget-progress .progress-bar {
+  height: 24px;
+  background: #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.budget-progress .progress-fill {
+  height: 100%;
+  background: var(--success);
+  transition: width 0.5s ease;
+}
+
+.budget-progress .progress-fill.warning {
+  background: var(--warning);
+}
+
+.budget-progress .progress-fill.over-budget {
+  background: var(--danger);
+}
+
+.budget-progress .progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.budget-summary {
+  text-align: center;
+  padding: 16px;
+  background: #f7fafc;
+  border-radius: var(--border-radius-sm);
+}
+
+.remaining {
+  margin-bottom: 8px;
+}
+
+.remaining.positive .remaining-value {
+  color: var(--success);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.remaining.negative .remaining-value {
+  color: var(--danger);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.days-remaining {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* Ticket Modal Detail */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 16px;
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.modal-body {
+  padding: 0;
+}
+
+.ticket-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.detail-info p {
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+}
+
+.detail-total {
+  text-align: right;
+}
+
+.detail-total .total-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: block;
+}
+
+.detail-total .total-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.ticket-items-detail .category-group {
+  margin-bottom: 16px;
+}
+
+.ticket-items-detail .category-group h4 {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-transform: capitalize;
+}
+
+.items-list .item-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f7fafc;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.item-row .item-name {
+  flex: 1;
+}
+
+.item-row .item-qty {
+  color: var(--text-secondary);
+  margin: 0 16px;
+}
+
+.item-row .item-price {
+  font-weight: 600;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+

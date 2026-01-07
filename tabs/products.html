@@ -1,0 +1,33 @@
+<!-- Products Tab Content -->
+<!-- Search -->
+<div class="chart-container">
+  <h3>🔍 Buscar Producto</h3>
+  <div class="search-box">
+    <input type="text" id="productSearch" placeholder="Buscar producto...">
+  </div>
+  <div id="searchResults" class="product-list"></div>
+</div>
+
+<!-- Top Products Chart -->
+<div class="chart-container">
+  <h3>🏆 Top 10 Productos por Gasto
+    <select id="topProductsSort" style="margin-left: 16px; padding: 4px 12px; border-radius: 4px; border: 1px solid #e2e8f0;">
+      <option value="spent">Por gasto total</option>
+      <option value="quantity">Por cantidad</option>
+      <option value="frequency">Por frecuencia</option>
+    </select>
+  </h3>
+  <div class="chart-wrapper">
+    <canvas id="topProductsChart"></canvas>
+  </div>
+</div>
+
+<!-- Product Table -->
+<div class="chart-container">
+  <h3>📦 Todos los Productos 
+    <span class="badge badge-primary" id="productCountBadge">0 productos</span>
+  </h3>
+  <div id="productTable">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+</div>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estadísticas Mercadona</title>
+  
+  <!-- CSS Modules -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/tabs.css">
+  <link rel="stylesheet" href="css/themes.css">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Header -->
+    <header class="header">
+      <div>
+        <h1>🛒 Estadísticas Mercadona</h1>
+        <p id="periodInfo">Cargando...</p>
+      </div>
+      <div class="filters">
+        <div class="filter-group">
+          <label for="storeFilter">🏪 Tienda:</label>
+          <select id="storeFilter">
+            <option value="all">Todas</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="yearFilter">📅 Año:</label>
+          <select id="yearFilter">
+            <option value="all">Todos</option>
+          </select>
+        </div>
+        <button class="icon-btn" id="darkModeToggle" title="Modo oscuro">🌙</button>
+        <button class="icon-btn" id="exportBtn" title="Exportar datos">📥</button>
+        <button class="icon-btn" id="reloadDataBtn" title="Cargar otros datos">📂</button>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="overview">
+        <span class="tab-icon">📊</span> Resumen
+      </button>
+      <button class="tab-btn" data-tab="categories">
+        <span class="tab-icon">🏷️</span> Categorías
+      </button>
+      <button class="tab-btn" data-tab="products">
+        <span class="tab-icon">📦</span> Productos
+      </button>
+      <button class="tab-btn" data-tab="prices">
+        <span class="tab-icon">📈</span> Precios
+      </button>
+      <button class="tab-btn" data-tab="tickets">
+        <span class="tab-icon">🧾</span> Tickets
+      </button>
+      <button class="tab-btn" data-tab="insights">
+        <span class="tab-icon">💡</span> Insights
+      </button>
+    </nav>
+
+    <!-- ==================== OVERVIEW TAB ==================== -->
+    <section id="overviewTab" class="tab-content active">
+      
+      <!-- Stats Cards -->
+      <div class="grid">
+        <div class="card">
+          <h3>💰 Total Gastado</h3>
+          <div class="value blue" id="totalSpent">-</div>
+          <div class="subtitle" id="totalSpentPeriod"></div>
+        </div>
+        <div class="card">
+          <h3>🧾 Total Tickets</h3>
+          <div class="value green" id="ticketCount">-</div>
+          <div class="subtitle" id="avgDaysBetween"></div>
+        </div>
+        <div class="card">
+          <h3>📊 Media por Ticket</h3>
+          <div class="value purple" id="avgTicket">-</div>
+          <div class="subtitle" id="ticketRange"></div>
+        </div>
+        <div class="card">
+          <h3>📅 Media Mensual</h3>
+          <div class="value orange" id="avgMonth">-</div>
+          <div class="subtitle" id="monthComparison"></div>
+        </div>
+        <div class="card">
+          <h3>🏪 Tienda más visitada</h3>
+          <div class="value" id="topStore">-</div>
+          <div class="subtitle" id="topStoreCount"></div>
+        </div>
+        <div class="card">
+          <h3>📆 Día favorito</h3>
+          <div class="value" id="favoriteDay">-</div>
+          <div class="subtitle" id="favoriteDayCount"></div>
+        </div>
+      </div>
+
+      <!-- Comparison Cards -->
+      <div class="comparison-section" id="comparisonSection">
+        <h3>📊 Comparativa con período anterior</h3>
+        <div class="grid grid-3" id="comparisonCards"></div>
+      </div>
+
+      <!-- Monthly Chart -->
+      <div class="chart-container">
+        <h3>📊 Gasto por Mes</h3>
+        <div class="chart-wrapper">
+          <canvas id="monthlyChart"></canvas>
+        </div>
+        <div id="monthlySummary"></div>
+      </div>
+
+      <!-- Weekly Pattern -->
+      <div class="chart-container">
+        <h3>📅 Patrón Semanal de Compras</h3>
+        <div class="chart-wrapper small">
+          <canvas id="weeklyChart"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== CATEGORIES TAB ==================== -->
+    <section id="categoriesTab" class="tab-content">
+      
+      <div class="grid grid-2">
+        <!-- Category Chart -->
+        <div class="chart-container">
+          <h3>🏷️ Distribución por Categoría</h3>
+          <div class="chart-wrapper">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Category List -->
+        <div class="chart-container">
+          <h3>📋 Detalle por Categoría</h3>
+          <div class="category-list" id="categoryList">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly Category Chart -->
+      <div class="chart-container">
+        <h3>📅 Gasto por Mes y Categoría</h3>
+        <div class="chart-wrapper" style="height: 400px;">
+          <canvas id="categoryMonthlyChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Products by Category -->
+      <div class="chart-container">
+        <h3>📦 Productos por Categoría
+          <select id="categoryProductFilter" class="inline-select">
+            <option value="all">Todas las categorías</option>
+          </select>
+          <select id="monthProductFilter" class="inline-select">
+            <option value="all">Todos los meses</option>
+          </select>
+        </h3>
+        <div id="categoryProductList">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== PRODUCTS TAB ==================== -->
+    <section id="productsTab" class="tab-content">
+      
+      <!-- Search -->
+      <div class="chart-container">
+        <h3>🔍 Buscar Producto</h3>
+        <div class="search-box">
+          <input type="text" id="productSearch" placeholder="Buscar producto...">
+        </div>
+        <div id="searchResults" class="product-list"></div>
+      </div>
+
+      <!-- Top Products Chart -->
+      <div class="chart-container">
+        <h3>🏆 Top 10 Productos por Gasto
+          <select id="topProductsSort" class="inline-select">
+            <option value="spent">Por gasto total</option>
+            <option value="quantity">Por cantidad</option>
+            <option value="frequency">Por frecuencia</option>
+          </select>
+        </h3>
+        <div class="chart-wrapper">
+          <canvas id="topProductsChart"></canvas>
+        </div>
+      </div>
+      
+      <!-- Product Table -->
+      <div class="chart-container">
+        <h3>📦 Todos los Productos 
+          <span class="badge badge-primary" id="productCountBadge">0 productos</span>
+        </h3>
+        <div id="productTable">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== PRICE HISTORY TAB ==================== -->
+    <section id="pricesTab" class="tab-content">
+      
+      <!-- Price Summary Cards -->
+      <div class="stats-grid" id="priceSummaryCards">
+        <!-- Will be populated by JS -->
+      </div>
+
+      <!-- General Price Trend Chart -->
+      <div class="chart-container">
+        <h3>📊 Tendencia General de Precios</h3>
+        <p class="chart-subtitle">Variación media de precios en el período seleccionado</p>
+        <div class="chart-wrapper">
+          <canvas id="generalPriceTrendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Individual Price Evolution Chart -->
+      <div class="chart-container">
+        <h3>📈 Evolución Individual
+          <select id="productPriceSelect" class="inline-select"></select>
+        </h3>
+        <div id="individualPriceChart" class="chart-wrapper">
+          <p style="text-align: center; color: var(--text-muted); padding: 40px;">Selecciona un producto para ver su evolución de precio</p>
+        </div>
+      </div>
+      
+      <!-- Price Changes Table -->
+      <div class="chart-container">
+        <h3>💹 Variación de Precios
+          <select id="priceSort" class="inline-select">
+            <option value="variation">Mayor variación</option>
+            <option value="increase">Mayor subida</option>
+            <option value="decrease">Mayor bajada</option>
+          </select>
+        </h3>
+        <div id="priceChangeTable">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TICKETS TAB ==================== -->
+    <section id="ticketsTab" class="tab-content">
+
+      <!-- Ticket Stats -->
+      <div id="ticketsStats" class="stats-grid"></div>
+
+      <!-- Ticket List Controls -->
+      <div class="chart-container">
+        <h3>🧾 Historial de Tickets
+          <select id="ticketSort" class="inline-select">
+            <option value="date-desc">Más recientes</option>
+            <option value="date-asc">Más antiguos</option>
+            <option value="total-desc">Mayor importe</option>
+            <option value="total-asc">Menor importe</option>
+            <option value="items-desc">Más productos</option>
+          </select>
+          <input type="text" id="ticketSearch" placeholder="Buscar ticket..." class="inline-input">
+          <select id="ticketsPerPage" class="inline-select">
+            <option value="10">10/página</option>
+            <option value="20">20/página</option>
+            <option value="50">50/página</option>
+          </select>
+        </h3>
+        <div id="ticketListContainer" class="ticket-list">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- Ticket Detail Modal -->
+      <div id="ticketModal" class="modal">
+        <div class="modal-content" id="ticketModalContent">
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== INSIGHTS TAB ==================== -->
+    <section id="insightsTab" class="tab-content">
+      
+      <!-- Price Alerts -->
+      <div class="chart-container">
+        <h3>🚨 Alertas de Precio</h3>
+        <p class="chart-subtitle">Productos con cambios de precio significativos</p>
+        <div id="priceAlerts"></div>
+      </div>
+
+      <!-- Spending Prediction -->
+      <div class="chart-container">
+        <h3>🔮 Predicción de Gasto</h3>
+        <div id="predictions" class="prediction-box"></div>
+      </div>
+
+      <!-- Shopping Habits -->
+      <div class="chart-container">
+        <h3>🧠 Hábitos de Compra</h3>
+        <div id="shoppingHabits"></div>
+      </div>
+
+      <!-- Budget Tracker -->
+      <div class="chart-container">
+        <h3>💳 Control de Presupuesto</h3>
+        <div id="budgetTracker"></div>
+      </div>
+
+      <!-- Shopping Patterns -->
+      <div class="chart-container">
+        <h3>📊 Patrones de Compra</h3>
+        <div id="shoppingPatterns"></div>
+      </div>
+
+      <!-- Savings Opportunities -->
+      <div class="chart-container">
+        <h3>💡 Oportunidades de Ahorro</h3>
+        <div id="savingsOpportunities"></div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- Data Loader Modal -->
+  <div id="dataLoaderModal" class="modal data-loader-modal">
+    <div class="modal-content data-loader-content">
+      <div class="modal-header">
+        <h2>🛒 Cargar Datos de Mercadona</h2>
+      </div>
+      <div class="modal-body">
+        <p class="modal-intro">No se encontró ningún archivo de datos. Puedes cargar tus tickets de dos formas:</p>
+        
+        <div class="loader-options">
+          <!-- Option 1: JSON File -->
+          <div class="loader-option">
+            <h3>📄 Cargar archivo JSON</h3>
+            <p>Si ya tienes un archivo <code>tickets.json</code> generado anteriormente:</p>
+            <div id="jsonDropzone" class="dropzone">
+              <div class="dropzone-content">
+                <span class="dropzone-icon">📁</span>
+                <p>Arrastra tu archivo JSON aquí</p>
+                <p class="text-muted">o haz clic para seleccionar</p>
+              </div>
+              <input type="file" id="jsonFileInput" accept=".json" hidden>
+            </div>
+            <div id="jsonStatus" class="status-message"></div>
+          </div>
+          
+          <div class="loader-divider">
+            <span>o</span>
+          </div>
+          
+          <!-- Option 2: PDF Files -->
+          <div class="loader-option">
+            <h3>📑 Cargar tickets en PDF</h3>
+            <p>Sube los PDFs de tus tickets de Mercadona para procesarlos:</p>
+            <div id="pdfDropzone" class="dropzone">
+              <div class="dropzone-content">
+                <span class="dropzone-icon">📄</span>
+                <p>Arrastra tus PDFs aquí</p>
+                <p class="text-muted">o haz clic para seleccionar (múltiples archivos)</p>
+              </div>
+              <input type="file" id="pdfFileInput" accept=".pdf" multiple hidden>
+            </div>
+            <div id="pdfFileList" class="file-list-container">
+              <p class="text-muted">No hay archivos seleccionados</p>
+            </div>
+            <button id="processPdfsBtn" class="btn btn-primary" disabled>
+              🚀 Procesar PDFs
+            </button>
+            <div id="pdfProgress" class="progress-container" style="display: none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>📊 Dashboard de estadísticas de compras en Mercadona</p>
+    <p>Datos extraídos de tickets digitales</p>
+  </footer>
+
+  <!-- PDF.js for PDF parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  </script>
+
+  <!-- JS Modules -->
+  <script src="js/utils.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/tabs/overview.js"></script>
+  <script src="js/tabs/categories.js"></script>
+  <script src="js/tabs/products.js"></script>
+  <script src="js/tabs/prices.js"></script>
+  <script src="js/tabs/tickets.js"></script>
+  <script src="js/tabs/insights.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!-- Prices Tab Content -->
+<div id="priceHistoryContent">
+  <!-- Price Summary Cards -->
+  <div class="stats-grid" id="priceSummaryCards">
+    <!-- Will be populated by JS -->
+  </div>
+
+  <!-- General Price Trend Chart -->
+  <div class="chart-container">
+    <h3>📊 Tendencia General de Precios</h3>
+    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 16px;">
+      Variación media de precios en el período seleccionado
+    </p>
+    <div class="chart-wrapper">
+      <canvas id="generalPriceTrendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Individual Price Evolution Chart -->
+  <div class="chart-container">
+    <h3>
+      📈 Evolución Individual
+      <select id="priceProductSelector" style="margin-left: 16px; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;"></select>
+    </h3>
+    <div class="chart-wrapper">
+      <canvas id="priceHistoryChart"></canvas>
+    </div>
+  </div>
+  
+  <!-- Price Changes Table -->
+  <div class="chart-container">
+    <h3>💹 Variación de Precios por Producto</h3>
+    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 16px;">
+      Haz clic en un producto para ver su gráfico de evolución
+    </p>
+    <div id="priceChangeTable">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,52 @@
+<!-- Insights Tab Content -->
+<!-- Price Alerts -->
+<div class="chart-container">
+  <h3>🚨 Alertas de Precio</h3>
+  <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 16px;">
+    Productos con cambios de precio significativos
+  </p>
+  <div id="priceAlerts"></div>
+</div>
+
+<!-- Spending Prediction -->
+<div class="chart-container">
+  <h3>🔮 Predicción de Gasto</h3>
+  <div id="predictions" class="prediction-box"></div>
+</div>
+
+<!-- Shopping Habits -->
+<div class="chart-container">
+  <h3>🧠 Hábitos de Compra</h3>
+  <div id="habitsGrid" class="habits-grid"></div>
+</div>
+
+<!-- Budget Tracker -->
+<div class="chart-container">
+  <h3>💳 Control de Presupuesto
+    <input type="number" id="budgetInput" placeholder="€/mes" style="margin-left: 16px; padding: 4px 12px; border-radius: 4px; border: 1px solid #e2e8f0; width: 120px;">
+    <button id="setBudgetBtn" class="btn-small">Establecer</button>
+  </h3>
+  <div id="budgetProgress"></div>
+</div>
+
+<!-- Shopping Patterns -->
+<div class="chart-container">
+  <h3>📊 Patrones de Compra</h3>
+  <div class="chart-wrapper">
+    <canvas id="shoppingPatternsChart"></canvas>
+  </div>
+</div>
+
+<!-- Savings Opportunities -->
+<div class="chart-container">
+  <h3>💡 Oportunidades de Ahorro</h3>
+  <div id="savingsOpportunities"></div>
+</div>
+
+<!-- Category Trends -->
+<div class="chart-container">
+  <h3>📈 Tendencias por Categoría</h3>
+  <div class="chart-wrapper">
+    <canvas id="categoryTrendsChart"></canvas>
+  </div>
+</div>

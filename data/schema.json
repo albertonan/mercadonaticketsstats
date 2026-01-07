@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mercadona Tickets Schema",
+  "description": "Schema para datos de tickets de Mercadona. Usar este archivo como plantilla para generar o actualizar datos.",
+  "type": "object",
+  "required": ["meta", "tickets", "categories"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "Metadatos del conjunto de datos",
+      "properties": {
+        "lastUpdated": { 
+          "type": "string", 
+          "format": "date", 
+          "description": "Fecha de última actualización YYYY-MM-DD" 
+        },
+        "totalTickets": { 
+          "type": "integer", 
+          "description": "Número total de tickets en el archivo" 
+        },
+        "currency": { 
+          "type": "string", 
+          "default": "EUR",
+          "description": "Moneda de los precios"
+        }
+      },
+      "required": ["lastUpdated", "totalTickets", "currency"]
+    },
+    "categories": {
+      "type": "object",
+      "description": "Definición de categorías de productos",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["name", "icon", "color"],
+        "properties": {
+          "name": { 
+            "type": "string",
+            "description": "Nombre legible de la categoría"
+          },
+          "icon": { 
+            "type": "string",
+            "description": "Emoji representativo de la categoría"
+          },
+          "color": { 
+            "type": "string", 
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "description": "Color hexadecimal para gráficos"
+          }
+        }
+      },
+      "propertyNames": {
+        "enum": ["proteinas", "lacteos", "frutas_verduras", "bebidas", "congelados", "despensa", "dulces_snacks", "higiene_limpieza", "otros"]
+      }
+    },
+    "tickets": {
+      "type": "array",
+      "description": "Lista de tickets/compras",
+      "items": {
+        "type": "object",
+        "required": ["id", "date", "total", "items", "store"],
+        "properties": {
+          "id": { 
+            "type": "string", 
+            "description": "ID único del ticket (número de factura simplificada)",
+            "pattern": "^[0-9]+-[0-9]+-[0-9]+$"
+          },
+          "date": { 
+            "type": "string", 
+            "format": "date", 
+            "description": "Fecha de compra YYYY-MM-DD" 
+          },
+          "time": { 
+            "type": "string", 
+            "pattern": "^[0-9]{2}:[0-9]{2}$", 
+            "description": "Hora de compra HH:MM" 
+          },
+          "total": { 
+            "type": "number", 
+            "minimum": 0, 
+            "description": "Total de la compra en euros" 
+          },
+          "store": {
+            "type": "object",
+            "required": ["name", "city"],
+            "properties": {
+              "name": { 
+                "type": "string",
+                "description": "Nombre de la tienda"
+              },
+              "city": { 
+                "type": "string",
+                "description": "Ciudad de la tienda"
+              }
+            }
+          },
+          "items": {
+            "type": "array",
+            "description": "Productos comprados en este ticket",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["name", "price", "quantity", "unitPrice", "category"],
+              "properties": {
+                "name": { 
+                  "type": "string", 
+                  "description": "Nombre del producto tal como aparece en el ticket" 
+                },
+                "price": { 
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Precio total de la línea (unitPrice * quantity)" 
+                },
+                "quantity": { 
+                  "type": "number", 
+                  "minimum": 0.001, 
+                  "description": "Cantidad comprada (unidades o kg)" 
+                },
+                "unitPrice": { 
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Precio por unidad o por kg" 
+                },
+                "category": { 
+                  "type": "string",
+                  "enum": ["proteinas", "lacteos", "frutas_verduras", "bebidas", "congelados", "despensa", "dulces_snacks", "higiene_limpieza", "otros"],
+                  "description": "Categoría del producto" 
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

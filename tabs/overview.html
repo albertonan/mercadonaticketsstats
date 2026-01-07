@@ -1,0 +1,57 @@
+<!-- Overview Tab Content -->
+<!-- Stats Cards -->
+<div class="grid">
+  <div class="card">
+    <h3>💰 Total Gastado</h3>
+    <div class="value blue" id="totalSpent">-</div>
+    <div class="subtitle" id="totalSpentPeriod"></div>
+  </div>
+  <div class="card">
+    <h3>🧾 Total Tickets</h3>
+    <div class="value green" id="ticketCount">-</div>
+    <div class="subtitle" id="avgDaysBetween"></div>
+  </div>
+  <div class="card">
+    <h3>📊 Media por Ticket</h3>
+    <div class="value purple" id="avgTicket">-</div>
+    <div class="subtitle" id="ticketRange"></div>
+  </div>
+  <div class="card">
+    <h3>📅 Media Mensual</h3>
+    <div class="value orange" id="avgMonth">-</div>
+    <div class="subtitle" id="monthComparison"></div>
+  </div>
+  <div class="card">
+    <h3>🏪 Tienda más visitada</h3>
+    <div class="value" id="topStore">-</div>
+    <div class="subtitle" id="topStoreCount"></div>
+  </div>
+  <div class="card">
+    <h3>📆 Día favorito</h3>
+    <div class="value" id="favoriteDay">-</div>
+    <div class="subtitle" id="favoriteDayCount"></div>
+  </div>
+</div>
+
+<!-- Comparison Cards -->
+<div class="comparison-section" id="comparisonSection">
+  <h3>📊 Comparativa con período anterior</h3>
+  <div class="grid grid-3" id="comparisonCards"></div>
+</div>
+
+<!-- Monthly Chart -->
+<div class="chart-container">
+  <h3>📊 Gasto por Mes</h3>
+  <div class="chart-wrapper">
+    <canvas id="monthlyChart"></canvas>
+  </div>
+  <div id="monthlySummary"></div>
+</div>
+
+<!-- Weekly Pattern -->
+<div class="chart-container">
+  <h3>📅 Patrón Semanal de Compras</h3>
+  <div class="chart-wrapper small">
+    <canvas id="weeklyChart"></canvas>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+<!-- Tickets Tab Content -->
+<!-- Ticket List -->
+<div class="chart-container">
+  <h3>🧾 Historial de Tickets
+    <select id="ticketSort" style="margin-left: 16px; padding: 4px 12px; border-radius: 4px; border: 1px solid #e2e8f0;">
+      <option value="date-desc">Más recientes</option>
+      <option value="date-asc">Más antiguos</option>
+      <option value="total-desc">Mayor importe</option>
+      <option value="total-asc">Menor importe</option>
+      <option value="items-desc">Más productos</option>
+    </select>
+    <input type="text" id="ticketSearch" placeholder="Buscar ticket..." style="margin-left: 8px; padding: 4px 12px; border-radius: 4px; border: 1px solid #e2e8f0; width: 150px;">
+  </h3>
+  <div id="ticketStats" class="stats-grid" style="margin-bottom: 16px;"></div>
+  <div id="ticketsList" class="ticket-list"></div>
+  <div id="ticketPagination" style="text-align: center; margin-top: 16px;"></div>
+</div>
+
+<!-- Ticket Detail Modal -->
+<div id="ticketModal" class="modal">
+  <div class="modal-content">
+    <span class="modal-close">&times;</span>
+    <div id="ticketDetail"></div>
+  </div>
+</div>
