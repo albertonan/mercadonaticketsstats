@@ -2,6 +2,19 @@
    MERCADONA STATS - UTILITY FUNCTIONS
    ============================================ */
 
+/**
+ * Parse a date string (YYYY-MM-DD) as local date, avoiding timezone issues.
+ * Using new Date("2024-01-15") interprets it as UTC, which can shift the day
+ * in local timezone. This function ensures the date is parsed as local.
+ * @param {string} dateStr - Date string in format "YYYY-MM-DD"
+ * @returns {Date} Date object in local timezone
+ */
+function parseLocalDate(dateStr) {
+  if (!dateStr) return new Date();
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 // Format currency
 function formatCurrency(value) {
   return new Intl.NumberFormat('es-ES', {
@@ -22,7 +35,7 @@ function formatMonth(yearMonth) {
 // Format date
 function formatDate(date) {
   if (!date) return '-';
-  const d = new Date(date);
+  const d = parseLocalDate(date);
   return d.toLocaleDateString('es-ES', { 
     day: 'numeric',
     month: 'short',

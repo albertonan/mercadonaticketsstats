@@ -110,7 +110,7 @@ function updateTicketsList(tickets) {
   // Sort
   switch(ticketsSort) {
     case 'date-asc':
-      filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+      filtered.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
       break;
     case 'total-desc':
       filtered.sort((a, b) => b.total - a.total);
@@ -122,7 +122,7 @@ function updateTicketsList(tickets) {
       filtered.sort((a, b) => (b.items?.length || 0) - (a.items?.length || 0));
       break;
     default: // date-desc
-      filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+      filtered.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
   }
   
   // Pagination
@@ -150,8 +150,8 @@ function updateTicketsList(tickets) {
         <div class="ticket-card" onclick="showTicketDetail(${startIndex + i})">
           <div class="ticket-header">
             <div class="ticket-date">
-              <span class="date-day">${new Date(t.date).getDate()}</span>
-              <span class="date-month">${new Date(t.date).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}</span>
+              <span class="date-day">${parseLocalDate(t.date).getDate()}</span>
+              <span class="date-month">${parseLocalDate(t.date).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}</span>
             </div>
             <div class="ticket-total">${formatCurrency(t.total)}</div>
           </div>
@@ -213,7 +213,7 @@ function showTicketDetail(index) {
   // Apply same sort as list
   switch(ticketsSort) {
     case 'date-asc':
-      filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+      filtered.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
       break;
     case 'total-desc':
       filtered.sort((a, b) => b.total - a.total);
@@ -225,7 +225,7 @@ function showTicketDetail(index) {
       filtered.sort((a, b) => (b.items?.length || 0) - (a.items?.length || 0));
       break;
     default:
-      filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+      filtered.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
   }
   
   const ticket = filtered[index];
@@ -312,7 +312,7 @@ function copyTicketToClipboard(index) {
   
   switch(ticketsSort) {
     case 'date-asc':
-      filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+      filtered.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
       break;
     case 'total-desc':
       filtered.sort((a, b) => b.total - a.total);
@@ -324,7 +324,7 @@ function copyTicketToClipboard(index) {
       filtered.sort((a, b) => (b.items?.length || 0) - (a.items?.length || 0));
       break;
     default:
-      filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+      filtered.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
   }
   
   const ticket = filtered[index];

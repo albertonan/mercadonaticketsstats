@@ -134,7 +134,7 @@ function renderShoppingHabits(tickets) {
   const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   
   tickets.forEach(t => {
-    const date = new Date(t.date);
+    const date = parseLocalDate(t.date);
     const day = date.getDay();
     dayCount[day] = (dayCount[day] || 0) + 1;
     
@@ -152,7 +152,7 @@ function renderShoppingHabits(tickets) {
   const avgItems = tickets.reduce((sum, t) => sum + (t.items?.length || 0), 0) / tickets.length;
   
   // Calculate shopping frequency
-  const dates = tickets.map(t => new Date(t.date)).sort((a, b) => a - b);
+  const dates = tickets.map(t => parseLocalDate(t.date)).sort((a, b) => a - b);
   let avgDaysBetween = 0;
   if (dates.length > 1) {
     const totalDays = (dates[dates.length - 1] - dates[0]) / (1000 * 60 * 60 * 24);
@@ -221,7 +221,7 @@ function renderShoppingPatterns(tickets) {
   // Find seasonal products
   const monthlyProducts = {};
   tickets.forEach(t => {
-    const month = new Date(t.date).getMonth();
+    const month = parseLocalDate(t.date).getMonth();
     (t.items || []).forEach(item => {
       if (!monthlyProducts[item.name]) {
         monthlyProducts[item.name] = new Array(12).fill(0);

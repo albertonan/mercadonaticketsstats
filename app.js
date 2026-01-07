@@ -815,7 +815,7 @@ function renderPriceHistory() {
   const priceChanges = [];
   Object.entries(history).forEach(([product, entries]) => {
     if (entries.length >= 2) {
-      const sorted = [...entries].sort((a, b) => new Date(a.date) - new Date(b.date));
+      const sorted = [...entries].sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
       const first = sorted[0];
       const last = sorted[sorted.length - 1];
       const change = last.price - first.price;
@@ -1410,7 +1410,7 @@ function renderWeeklyChart() {
   const dayCounts = new Array(7).fill(0);
   
   tickets.forEach(t => {
-    const day = new Date(t.date).getDay();
+    const day = parseLocalDate(t.date).getDay();
     dayTotals[day] += t.total;
     dayCounts[day]++;
   });
@@ -1459,18 +1459,18 @@ function renderComparison() {
   if (tickets.length < 2) return;
   
   // Sort by date
-  const sorted = [...tickets].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sorted = [...tickets].sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
   
   // Get last 30 days vs previous 30 days
-  const now = new Date(sorted[0].date);
+  const now = parseLocalDate(sorted[0].date);
   const thirtyDaysAgo = new Date(now);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const sixtyDaysAgo = new Date(now);
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
   
-  const recent = sorted.filter(t => new Date(t.date) >= thirtyDaysAgo);
+  const recent = sorted.filter(t => parseLocalDate(t.date) >= thirtyDaysAgo);
   const previous = sorted.filter(t => {
-    const d = new Date(t.date);
+    const d = parseLocalDate(t.date);
     return d >= sixtyDaysAgo && d < thirtyDaysAgo;
   });
   
@@ -1573,8 +1573,8 @@ function renderTicketsList() {
 function sortTickets(tickets, sortBy) {
   const sorted = [...tickets];
   switch(sortBy) {
-    case 'date-desc': return sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
-    case 'date-asc': return sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
+    case 'date-desc': return sorted.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
+    case 'date-asc': return sorted.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
     case 'total-desc': return sorted.sort((a, b) => b.total - a.total);
     case 'total-asc': return sorted.sort((a, b) => a.total - b.total);
     case 'items-desc': return sorted.sort((a, b) => b.itemCount - a.itemCount);
@@ -1688,8 +1688,8 @@ function renderTicketCalendar(tickets) {
   });
   
   const dates = Object.keys(ticketsByDate);
-  const sortedTickets = [...tickets].sort((a, b) => new Date(b.date) - new Date(a.date));
-  const lastDate = new Date(sortedTickets[0].date);
+  const sortedTickets = [...tickets].sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
+  const lastDate = parseLocalDate(sortedTickets[0].date);
   
   // Show last 3 months
   let html = '<div class="calendar-months">';
@@ -1906,7 +1906,7 @@ function renderPriceAlerts() {
   Object.entries(priceHistory).forEach(([name, history]) => {
     if (history.length < 2) return;
     
-    const sorted = history.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const sorted = history.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
     const firstPrice = sorted[0].price;
     const lastPrice = sorted[sorted.length - 1].price;
     const change = ((lastPrice - firstPrice) / firstPrice * 100);
@@ -2002,7 +2002,7 @@ function renderShoppingHabits() {
   // Favorite time (if we had hour data, for now use weekday)
   const dayCounts = new Array(7).fill(0);
   const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-  tickets.forEach(t => dayCounts[new Date(t.date).getDay()]++);
+  tickets.forEach(t => dayCounts[parseLocalDate(t.date).getDay()]++);
   const favoriteDay = days[dayCounts.indexOf(Math.max(...dayCounts))];
   
   // Top category
@@ -2196,7 +2196,7 @@ function renderShoppingPatterns() {
   const weekData = {};
   
   tickets.forEach(t => {
-    const date = new Date(t.date);
+    const date = parseLocalDate(t.date);
     const day = date.getDay();
     dayData[day] += t.total;
     dayCount[day]++;

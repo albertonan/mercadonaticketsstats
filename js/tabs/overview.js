@@ -32,7 +32,7 @@ function renderOverview() {
   // Favorite day
   const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   const dayCounts = new Array(7).fill(0);
-  tickets.forEach(t => dayCounts[new Date(t.date).getDay()]++);
+  tickets.forEach(t => dayCounts[parseLocalDate(t.date).getDay()]++);
   const favoriteDayIndex = dayCounts.indexOf(Math.max(...dayCounts));
   
   // Update DOM
@@ -78,7 +78,7 @@ function renderWeeklyChart() {
   const dayTotals = new Array(7).fill(0);
   
   tickets.forEach(t => {
-    const day = new Date(t.date).getDay();
+    const day = parseLocalDate(t.date).getDay();
     dayCounts[day]++;
     dayTotals[day] += t.total;
   });
@@ -99,16 +99,16 @@ function renderComparison() {
     return;
   }
   
-  const sorted = [...tickets].sort((a, b) => new Date(b.date) - new Date(a.date));
-  const now = new Date(sorted[0].date);
+  const sorted = [...tickets].sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
+  const now = parseLocalDate(sorted[0].date);
   const thirtyDaysAgo = new Date(now);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const sixtyDaysAgo = new Date(now);
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
   
-  const recent = sorted.filter(t => new Date(t.date) >= thirtyDaysAgo);
+  const recent = sorted.filter(t => parseLocalDate(t.date) >= thirtyDaysAgo);
   const previous = sorted.filter(t => {
-    const d = new Date(t.date);
+    const d = parseLocalDate(t.date);
     return d >= sixtyDaysAgo && d < thirtyDaysAgo;
   });
   
