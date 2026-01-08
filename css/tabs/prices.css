@@ -1,0 +1,84 @@
+/* ============================================
+   PRICES TAB STYLES
+   Price Changes, Price History
+   ============================================ */
+
+.price-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.price-change.increase {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.price-change.decrease {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.price-history-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-main);
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 8px;
+}
+
+.price-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  width: 100px;
+}
+
+.price-value {
+  font-weight: 600;
+  flex: 1;
+}
+
+.price-diff {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.price-diff.up {
+  color: var(--danger);
+}
+
+.price-diff.down {
+  color: var(--success);
+}
+
+/* Price trend indicators */
+.trend-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.trend-up {
+  color: var(--danger);
+}
+
+.trend-down {
+  color: var(--success);
+}
+
+.trend-stable {
+  color: var(--text-muted);
+}
+
+/* Price unit display */
+.price-unit {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  margin-top: 2px;
+}

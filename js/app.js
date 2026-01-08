@@ -8,11 +8,76 @@ let currentYear = 'all';
 let currentStore = 'all';
 let fullData = null; // Complete data including categories
 
+// App version - increment to force cache clear
+const APP_VERSION = '2.1.0';
+const APP_VERSION_KEY = 'mercadona_app_version';
+
 // Note: charts registry is defined in js/charts.js
+
+// Check if app version changed and clear old data if needed
+function checkAppVersion() {
+  const savedVersion = localStorage.getItem(APP_VERSION_KEY);
+  if (savedVersion !== APP_VERSION) {
+    console.log(`App updated from ${savedVersion || 'unknown'} to ${APP_VERSION}, clearing old cache...`);
+    clearAllData();
+    localStorage.setItem(APP_VERSION_KEY, APP_VERSION);
+    return true; // Version changed
+  }
+  return false;
+}
+
+// Clear all localStorage data (keeps raw texts for re-parsing)
+function clearAllData() {
+  const keysToRemove = [
+    'mercadona_tickets_data',
+    'mercadona_active_tab',
+    'mercadona_year_filter',
+    'mercadona_budget'
+  ];
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+  ticketsData = [];
+  fullData = null;
+  console.log('All cached data cleared (raw texts preserved for re-parsing)');
+}
+
+// Clear everything including raw texts (full reset)
+function clearEverything() {
+  clearAllData();
+  if (typeof clearRawTexts === 'function') {
+    clearRawTexts();
+  }
+  localStorage.removeItem(APP_VERSION_KEY);
+  console.log('Full reset complete (including raw texts)');
+}
+
+// Validate ticket date format (should be YYYY-MM-DD)
+function validateTicketDates(tickets) {
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  let fixed = 0;
+  
+  tickets.forEach(t => {
+    if (t.date && !dateRegex.test(t.date)) {
+      // Try to fix DD/MM/YYYY format
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(t.date)) {
+        const [day, month, year] = t.date.split('/');
+        t.date = `${year}-${month}-${day}`;
+        fixed++;
+      }
+    }
+  });
+  
+  if (fixed > 0) {
+    console.log(`Fixed ${fixed} tickets with old date format`);
+  }
+  return tickets;
+}
 
 // Initialize application
 async function init() {
   setupDarkMode();
+  
+  // Check for version update (clears cache if needed)
+  const versionChanged = checkAppVersion();
   
   const hasData = await tryLoadData();
   
@@ -36,6 +101,9 @@ async function tryLoadData() {
       fullData = migratedData;
       ticketsData = fullData.tickets || fullData;
       
+      // Validate and fix date formats
+      ticketsData = validateTicketDates(ticketsData);
+      
       if (ticketsData && ticketsData.length > 0) {
         console.log(`Loaded ${ticketsData.length} tickets from file${migrated ? ' (migrated)' : ''}`);
         return true;
@@ -55,6 +123,9 @@ async function tryLoadData() {
       const { data: migratedData, migrated } = migrateTicketsData(data);
       fullData = migratedData;
       ticketsData = fullData.tickets || fullData;
+      
+      // Validate and fix date formats
+      ticketsData = validateTicketDates(ticketsData);
       
       if (ticketsData && ticketsData.length > 0) {
         // If migrated, save back to localStorage
@@ -97,6 +168,15 @@ function startApp() {
   // Restore last active tab
   const savedTab = localStorage.getItem('mercadona_active_tab') || 'overview';
   switchTab(savedTab);
+  
+  // Log raw texts info
+  if (typeof getRawTexts === 'function') {
+    const rawTexts = getRawTexts();
+    const count = Object.keys(rawTexts).length;
+    if (count > 0) {
+      console.log(`📄 ${count} raw PDF texts stored for future re-parsing`);
+    }
+  }
   
   console.log('Mercadona Stats initialized');
 }

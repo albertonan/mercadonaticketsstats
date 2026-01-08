@@ -1,0 +1,89 @@
+/* ============================================
+   CATEGORIES TAB STYLES
+   Category List, Category Items
+   ============================================ */
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-radius: var(--border-radius-sm);
+  background: var(--bg-main);
+  transition: transform 0.2s;
+}
+
+.category-item:hover {
+  transform: translateX(4px);
+}
+
+.category-color {
+  width: 8px;
+  height: 48px;
+  border-radius: 4px;
+  margin-right: 16px;
+}
+
+.category-info {
+  flex: 1;
+}
+
+.category-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.category-value {
+  font-weight: 700;
+  color: var(--info);
+  text-align: right;
+}
+
+.category-percent {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Category chart styles */
+.category-chart-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.category-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}

@@ -4,7 +4,10 @@
    ============================================ */
 
 // Parser version - increment when categorization logic changes
-const PARSER_VERSION = '2.0.0';
+const PARSER_VERSION = '2.1.0';
+
+// Storage key for raw PDF texts
+const RAW_TEXTS_KEY = 'mercadona_raw_texts';
 
 /**
  * Format a date as YYYY-MM-DD in local timezone (not UTC)
@@ -591,11 +594,84 @@ function parseSinglePDFText(text, filename) {
 }
 
 /**
+ * Save raw texts to localStorage for future re-parsing
+ */
+function saveRawTexts(rawTexts) {
+  try {
+    const existing = getRawTexts();
+    // Merge with existing, using invoice ID as key
+    const merged = { ...existing, ...rawTexts };
+    localStorage.setItem(RAW_TEXTS_KEY, JSON.stringify(merged));
+    console.log(`Saved ${Object.keys(rawTexts).length} raw texts (total: ${Object.keys(merged).length})`);
+    return true;
+  } catch (e) {
+    console.warn('Could not save raw texts to localStorage:', e.message);
+    return false;
+  }
+}
+
+/**
+ * Get raw texts from localStorage
+ */
+function getRawTexts() {
+  try {
+    const saved = localStorage.getItem(RAW_TEXTS_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+/**
+ * Clear raw texts from localStorage
+ */
+function clearRawTexts() {
+  localStorage.removeItem(RAW_TEXTS_KEY);
+}
+
+/**
+ * Re-parse tickets from stored raw texts
+ */
+function reparseFromRawTexts() {
+  const rawTexts = getRawTexts();
+  const entries = Object.entries(rawTexts);
+  
+  if (entries.length === 0) {
+    console.log('No raw texts available for re-parsing');
+    return null;
+  }
+  
+  console.log(`Re-parsing ${entries.length} tickets from raw texts...`);
+  
+  const tickets = [];
+  const seenIds = new Set();
+  
+  for (const [id, text] of entries) {
+    try {
+      const ticket = parseSinglePDFText(text, id);
+      if (ticket && !seenIds.has(ticket.id)) {
+        seenIds.add(ticket.id);
+        tickets.push(ticket);
+      }
+    } catch (error) {
+      console.error(`Error re-parsing ${id}:`, error);
+    }
+  }
+  
+  // Sort by date
+  tickets.sort((a, b) => a.date.localeCompare(b.date));
+  
+  console.log(`Re-parsed ${tickets.length} tickets successfully`);
+  return tickets;
+}
+
+/**
  * Process multiple PDF files and generate tickets data
  */
 async function processPDFs(files, progressCallback) {
   const tickets = [];
   const seenIds = new Set();
+  const rawTexts = {}; // Store raw texts for later re-parsing
   let processed = 0;
   
   for (const file of files) {
@@ -609,6 +685,8 @@ async function processPDFs(files, progressCallback) {
       if (ticket && !seenIds.has(ticket.id)) {
         seenIds.add(ticket.id);
         tickets.push(ticket);
+        // Store raw text using invoice ID as key
+        rawTexts[ticket.id] = text;
       }
       
       processed++;
@@ -618,6 +696,11 @@ async function processPDFs(files, progressCallback) {
     } catch (error) {
       console.error(`Error processing ${file.name}:`, error);
     }
+  }
+  
+  // Save raw texts for future re-parsing
+  if (Object.keys(rawTexts).length > 0) {
+    saveRawTexts(rawTexts);
   }
   
   // Sort by date
@@ -653,7 +736,7 @@ function buildTicketsData(tickets) {
 
 /**
  * Migrate tickets data from older parser versions
- * Re-categorizes all products using current categorization logic
+ * First tries to re-parse from raw texts, then falls back to re-categorization
  */
 function migrateTicketsData(data) {
   const currentVersion = data?.meta?.parserVersion;
@@ -664,6 +747,21 @@ function migrateTicketsData(data) {
   
   console.log(`Migrating tickets from version ${currentVersion || 'unknown'} to ${PARSER_VERSION}`);
   
+  // Try to re-parse from raw texts first (full re-parse)
+  const rawTexts = getRawTexts();
+  if (Object.keys(rawTexts).length > 0) {
+    console.log('Raw texts available, performing full re-parse...');
+    const reparsedTickets = reparseFromRawTexts();
+    
+    if (reparsedTickets && reparsedTickets.length > 0) {
+      const migratedData = buildTicketsData(reparsedTickets);
+      console.log(`Full re-parse complete: ${reparsedTickets.length} tickets updated to parser v${PARSER_VERSION}`);
+      return { data: migratedData, migrated: true };
+    }
+  }
+  
+  // Fallback: just re-categorize existing products
+  console.log('No raw texts available, re-categorizing products only...');
   const tickets = data.tickets || data;
   
   // Re-categorize all products

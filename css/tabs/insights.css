@@ -1,0 +1,318 @@
+/* ============================================
+   INSIGHTS TAB - NEW DESIGN (Bento Grid)
+   ============================================ */
+
+.insights-dashboard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(260px, auto);
+  gap: 20px;
+}
+
+/* Insight Cards Base */
+.insight-card {
+  background: var(--bg-card);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.insight-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+/* Specific Cards Grid Setup */
+.price-alerts-card { grid-column: 1 / 3; }
+.budget-card { grid-column: 3 / 4; }
+
+.habits-card { grid-column: 1 / 2; }
+.heatmap-card { grid-column: 2 / 4; }
+
+.savings-card { grid-column: 1 / 4; }
+
+/* ========== 1. PRICE ALERTS ========== */
+.alerts-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.alert-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--border-radius-sm);
+}
+
+.alert-green { background-color: var(--success-pastel); }
+.alert-red { background-color: var(--danger-pastel); }
+
+.alert-info { display: flex; flex-direction: column; gap: 2px; }
+.alert-product-name { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
+.alert-price-details { font-size: 0.8rem; color: var(--text-secondary); }
+.alert-diff { font-weight: 700; margin-right: 4px; }
+.alert-green .alert-diff { color: var(--success); }
+.alert-red .alert-diff { color: var(--danger); }
+
+.alert-arrow { font-size: 1.1rem; }
+.alert-green .alert-arrow { color: var(--success); }
+.alert-red .alert-arrow { color: var(--danger); }
+
+/* ========== 2. PREDICTIONS ========== */
+.prediction-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.prediction-badge {
+  background-color: #f3f4f6;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4b5563;
+  width: fit-content;
+  margin-bottom: 16px;
+}
+
+.chart-wrapper-small {
+  flex: 1;
+  min-height: 150px;
+  position: relative;
+}
+
+/* ========== 3. BUDGET ========== */
+.budget-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.budget-chart-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin-bottom: 12px;
+}
+
+.budget-center-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+#budgetPercent {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.budget-sub {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 4px 0 2px 0;
+}
+
+.budget-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.budget-status {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ========== 4. HABITS ========== */
+.habits-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+.habit-box {
+  background: var(--bg-main);
+  border-radius: var(--border-radius-sm);
+  padding: 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.habit-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+}
+
+.habit-value-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.habit-icon { font-size: 1rem; width: 20px; text-align: center; opacity: 0.7; }
+.habit-value-row span:last-child { font-weight: 500; color: var(--text-secondary); font-size: 0.9rem; }
+
+.habit-big-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+.habit-big-value .unit { font-size: 1rem; font-weight: 600; color: var(--text-secondary); }
+
+.habit-trend {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.habit-trend:before { content: '↗'; color: var(--text-muted); }
+
+/* ========== 5. HEATMAP ========== */
+.heatmap-wrapper {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  gap: 4px;
+  height: 100%;
+}
+
+.heatmap-labels-y {
+  grid-row: 1;
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  gap: 3px;
+  padding-right: 6px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.heatmap-labels-y span {
+  display: flex;
+  align-items: center;
+}
+
+.heatmap-grid {
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  grid-template-rows: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.heatmap-labels-x {
+  grid-column: 2 / 3;
+  grid-row: 2;
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding-top: 4px;
+}
+
+.heat-cell {
+  border-radius: 2px;
+  width: 100%;
+  height: 100%;
+  min-height: 16px;
+}
+.heat-empty { background-color: var(--bg-main); }
+.heat-filled { /* Color set by JS */ }
+.heat-high { /* Color set by JS */ }
+
+/* ========== 6. SAVINGS ========== */
+.savings-grid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.savings-card-item {
+  background: var(--bg-main);
+  border-radius: var(--border-radius-sm);
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 200px;
+}
+
+.savings-icon {
+  font-size: 1.5rem;
+  background: var(--bg-card);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  flex-shrink: 0;
+}
+
+.savings-info h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.savings-info p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1200px) {
+  .insights-dashboard {
+    grid-template-columns: 1fr 1fr;
+  }
+  .price-alerts-card, .prediction-card, .budget-card, .habits-card, .heatmap-card {
+    grid-column: span 1;
+  }
+  .heatmap-card { grid-column: 1 / 3; }
+  .savings-card { grid-column: 1 / 3; }
+  
+  .savings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .insights-dashboard {
+    grid-template-columns: 1fr;
+  }
+  .price-alerts-card, .prediction-card, .budget-card, .habits-card, .heatmap-card, .savings-card {
+    grid-column: 1 / 2;
+  }
+  .savings-grid {
+    grid-template-columns: 1fr;
+  }
+}

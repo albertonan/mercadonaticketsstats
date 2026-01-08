@@ -1,0 +1,65 @@
+/* ============================================
+   PRODUCTS TAB STYLES
+   Product List, Search, Product Items
+   ============================================ */
+
+.product-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.product-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--bg-main);
+  border-radius: var(--border-radius-sm);
+  transition: background 0.2s;
+}
+
+.product-item:hover {
+  background: #e5e7eb;
+}
+
+.product-icon {
+  font-size: 1.5rem;
+  margin-right: 12px;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.product-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.product-price {
+  font-weight: 700;
+  color: var(--info);
+}
+
+/* ========== SEARCH RESULTS ========== */
+#searchResults {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#searchResults:empty::after {
+  content: 'Escribe para buscar productos...';
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  display: block;
+  text-align: center;
+  padding: 20px;
+}

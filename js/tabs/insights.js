@@ -306,6 +306,7 @@ function renderHeatmap(tickets) {
   matrix.forEach(row => row.forEach(v => { if (v > maxVal) maxVal = v; }));
   
   // Render grid cells (row by row, left to right)
+  const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   let html = '';
   for (let row = 0; row < 7; row++) {
       for (let col = 0; col < 15; col++) {
@@ -326,7 +327,8 @@ function renderHeatmap(tickets) {
               cellClass += ' heat-empty';
           }
           
-          html += `<div class="${cellClass}" style="background-color: ${bgColor};" title="${val} compras"></div>`;
+          const hour = col + 8;
+          html += `<div class="${cellClass}" style="background-color: ${bgColor};" title="${dayNames[row]} ${hour}h: ${val} compras"></div>`;
       }
   }
   grid.innerHTML = html;

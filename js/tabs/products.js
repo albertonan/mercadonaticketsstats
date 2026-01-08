@@ -45,6 +45,9 @@ function setupProductSearch(productData) {
   const results = document.getElementById('searchResults');
   if (!input || !results) return;
   
+  // Store product data globally for click handlers
+  window._productData = productData;
+  
   input.addEventListener('input', debounce(() => {
     const query = input.value.toLowerCase().trim();
     if (query.length < 2) {
@@ -60,7 +63,7 @@ function setupProductSearch(productData) {
     results.innerHTML = matches.length > 0 ? matches.map(([name, data]) => {
       const avgPrice = data.prices.reduce((a, b) => a + b, 0) / data.prices.length;
       return `
-        <div class="product-item">
+        <div class="product-item clickable" onclick="handleProductClick('${escapeAttr(name)}')">
           <div class="product-icon">${getCategoryEmoji(data.category)}</div>
           <div class="product-info">
             <div class="product-name">${name}</div>
@@ -73,6 +76,11 @@ function setupProductSearch(productData) {
       `;
     }).join('') : '<p style="padding:16px;color:var(--text-muted);text-align:center;">Sin resultados</p>';
   }, 300));
+}
+
+// Helper to escape attribute values
+function escapeAttr(str) {
+  return str.replace(/'/g, "\\'").replace(/"/g, "&quot;");
 }
 
 function renderTopProductsChart(productData) {
@@ -149,6 +157,9 @@ function renderProductTable(productData) {
   
   const sorted = Object.entries(productData).sort((a, b) => b[1].total - a[1].total);
   
+  // Store product data globally for click handlers
+  window._productData = productData;
+  
   container.innerHTML = `
     <div class="table-container" style="max-height: 500px; overflow-y: auto;">
       <table>
@@ -163,7 +174,7 @@ function renderProductTable(productData) {
         </thead>
         <tbody>
           ${sorted.slice(0, 100).map(([name, data]) => `
-            <tr>
+            <tr class="clickable-row" onclick="handleProductClick('${escapeAttr(name)}')" title="Ver información nutricional">
               <td>${name}</td>
               <td>${getCategoryEmoji(data.category)} ${data.category}</td>
               <td style="text-align: right;">${data.count}</td>
@@ -176,4 +187,12 @@ function renderProductTable(productData) {
     </div>
     ${sorted.length > 100 ? `<p style="text-align: center; color: var(--text-muted); margin-top: 16px;">Mostrando 100 de ${sorted.length} productos</p>` : ''}
   `;
+}
+
+// Handle product click from table
+function handleProductClick(productName) {
+  const data = window._productData?.[productName];
+  if (data) {
+    showNutritionModal(productName, data);
+  }
 }
