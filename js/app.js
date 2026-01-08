@@ -29,11 +29,15 @@ async function tryLoadData() {
   try {
     const response = await fetch('data/tickets.json');
     if (response.ok) {
-      fullData = await response.json();
+      let data = await response.json();
+      
+      // Check if migration needed
+      const { data: migratedData, migrated } = migrateTicketsData(data);
+      fullData = migratedData;
       ticketsData = fullData.tickets || fullData;
       
       if (ticketsData && ticketsData.length > 0) {
-        console.log(`Loaded ${ticketsData.length} tickets from file`);
+        console.log(`Loaded ${ticketsData.length} tickets from file${migrated ? ' (migrated)' : ''}`);
         return true;
       }
     }
@@ -45,11 +49,24 @@ async function tryLoadData() {
   try {
     const savedData = localStorage.getItem('mercadona_tickets_data');
     if (savedData) {
-      fullData = JSON.parse(savedData);
+      let data = JSON.parse(savedData);
+      
+      // Check if migration needed and migrate
+      const { data: migratedData, migrated } = migrateTicketsData(data);
+      fullData = migratedData;
       ticketsData = fullData.tickets || fullData;
       
       if (ticketsData && ticketsData.length > 0) {
-        console.log(`Loaded ${ticketsData.length} tickets from localStorage`);
+        // If migrated, save back to localStorage
+        if (migrated) {
+          try {
+            localStorage.setItem('mercadona_tickets_data', JSON.stringify(fullData));
+            console.log('Migrated data saved to localStorage');
+          } catch (e) {
+            console.warn('Could not save migrated data to localStorage');
+          }
+        }
+        console.log(`Loaded ${ticketsData.length} tickets from localStorage${migrated ? ' (migrated)' : ''}`);
         return true;
       }
     }

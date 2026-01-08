@@ -3,6 +3,9 @@
    Replica la lógica de parse_tickets.py
    ============================================ */
 
+// Parser version - increment when categorization logic changes
+const PARSER_VERSION = '2.0.0';
+
 /**
  * Format a date as YYYY-MM-DD in local timezone (not UTC)
  * Avoids timezone issues with toISOString() which converts to UTC
@@ -14,6 +17,109 @@ function formatLocalDate(year, month, day) {
   return `${y}-${m}-${d}`;
 }
 
+// Reglas de prioridad: se evalúan PRIMERO para resolver conflictos
+// El orden importa: reglas más específicas primero
+const PRIORITY_RULES = [
+  // Excepciones específicas PRIMERO (antes de las reglas generales)
+  { pattern: /QUESO RALLADO PIZZA|QUESO PIZZA/i, category: 'lacteos' }, // Queso para pizza = lácteos, no congelados
+  { pattern: /VELA\s/i, category: 'higiene_limpieza' }, // Velas aromáticas = higiene, no bebidas
+  { pattern: /ULTRA WHITE/i, category: 'higiene_limpieza' }, // Dentífrico blanqueador
+  { pattern: /SUAVIZANTE/i, category: 'higiene_limpieza' }, // Suavizante ropa
+  { pattern: /TURRON|TURRÓN/i, category: 'dulces_snacks' }, // Turrón siempre es dulce
+  
+  // Lácteos - productos proteínicos Hacendado primero
+  { pattern: /\+\s*PROT|\+ PROTEÍNA|\+PROTEINAS|\+PROT/i, category: 'lacteos' }, // Yogures +proteína
+  { pattern: /PROTEÍNAS FLAN|PROTEÍNAS NATURAL|PROTEÍNAS STRACCI|PROTEINA 0%/i, category: 'lacteos' },
+  { pattern: /0% CON FRUTAS|0%0%/i, category: 'lacteos' }, // Yogures 0%
+  { pattern: /Q\.?\s*LONCHAS|Q\s*SEMI|QUESO/i, category: 'lacteos' }, // Quesos
+  
+  // Proteínas
+  { pattern: /CRUNCHY CHICKEN|MEDALLÓN|MEDALLON|MUSLO|CONTRA DES|CUARTO CERT|SALAMI|TACOS DE POTA/i, category: 'proteinas' },
+  { pattern: /F\.\s*PLANCHA|FILETE/i, category: 'proteinas' }, // Filetes
+  { pattern: /B\.GELATINA CARNE/i, category: 'proteinas' }, // Gelatina para perros con carne
+  
+  // Congelados - pizzas y productos congelados tienen prioridad sobre sus ingredientes
+  { pattern: /\bPIZZA\b/i, category: 'congelados' }, // Solo pizza como palabra completa
+  { pattern: /LASAÑA|LASANA/i, category: 'congelados' },
+  { pattern: /CANELONES|CANELON|CANELÓN/i, category: 'congelados' },
+  { pattern: /NUGGETS/i, category: 'congelados' },
+  { pattern: /CROQUETAS/i, category: 'congelados' },
+  { pattern: /FIGURITAS/i, category: 'congelados' },
+  { pattern: /EMPANADO|EMPANADA/i, category: 'congelados' },
+  { pattern: /BENTO/i, category: 'congelados' },
+  { pattern: /ARROZ TRES|ARROZ ULTRACONGELADO/i, category: 'congelados' },
+  { pattern: /SAN JACOBO/i, category: 'congelados' },
+  { pattern: /TEQUEÑOS/i, category: 'congelados' },
+  { pattern: /SALTEADO DE VE/i, category: 'congelados' }, // Salteado de verduras congelado
+  
+  // Despensa - productos procesados tienen prioridad sobre ingredientes frescos
+  { pattern: /TOMATE FRITO|TOM\.FRITO|TOMATE TRITURADO/i, category: 'despensa' },
+  { pattern: /CALDO POLLO|CALDO CARNE|CALDO VERDURAS|CALDO COCIDO/i, category: 'despensa' },
+  { pattern: /VIRGEN EXTRA|ACEITE GRAN|ACEITE OLIVA/i, category: 'despensa' },
+  { pattern: /100% INTEGRAL|INTEGRAL FINO/i, category: 'despensa' },
+  { pattern: /AVENA MOLIDA|COPOS DE AVENA/i, category: 'despensa' },
+  { pattern: /COUS COUS|TORTIGLIONI|RIGATONI|FUSILLI/i, category: 'despensa' },
+  { pattern: /SARDINILLAS|SARDINAS EN|CABALLA EN/i, category: 'despensa' },
+  { pattern: /A\. NEGRAS|ACEIT\./i, category: 'despensa' },
+  { pattern: /4 ESTACIONES/i, category: 'despensa' }, // Especias 4 estaciones
+  { pattern: /ESP VERDE|ESPÁRRAGO/i, category: 'despensa' }, // Espárragos en conserva
+  
+  // Bebidas - cerveza y refrescos
+  { pattern: /DOBLE MALTA|SIN FILTRAR|CERV\.|\.ÁGUILA|RADLER/i, category: 'bebidas' },
+  { pattern: /CC ZERO|COCA.COLA|PEPSI|FANTA/i, category: 'bebidas' },
+  { pattern: /TINTO VERANO/i, category: 'bebidas' },
+  { pattern: /AGUA MICELAR/i, category: 'higiene_limpieza' }, // No es bebida!
+  { pattern: /CÁP\.\s*EXTRA|CÁP\.\s*FORTE/i, category: 'bebidas' }, // Cápsulas de café
+  { pattern: /BLANCO DULCE|DULZZE|CAPERUCITA|RIOJA|CRIANZA/i, category: 'bebidas' }, // Vinos
+  { pattern: /ESTRELLA/i, category: 'bebidas' }, // Cerveza Estrella
+  { pattern: /VARITAS CHAI/i, category: 'bebidas' }, // Te chai
+  { pattern: /C\. TOSTADO/i, category: 'bebidas' }, // Café tostado
+  
+  // Dulces y snacks - chocolate y dulces tienen prioridad
+  { pattern: /CHOCOLATE|CHOCO/i, category: 'dulces_snacks' },
+  { pattern: /PANETTONE|PANDORO/i, category: 'dulces_snacks' },
+  { pattern: /CACAHUETE/i, category: 'dulces_snacks' },
+  { pattern: /CARACOLA/i, category: 'dulces_snacks' },
+  { pattern: /XUXES|ROCHER|LINDOR|FERRERO/i, category: 'dulces_snacks' },
+  { pattern: /TORTITAS ALMENDRA|TORTITAS ARROZ/i, category: 'dulces_snacks' },
+  { pattern: /BOLITA COCO/i, category: 'dulces_snacks' },
+  { pattern: /BERLINA/i, category: 'dulces_snacks' },
+  { pattern: /BARR PROT|BARRITA PROT/i, category: 'dulces_snacks' }, // Barritas proteína = snacks
+  { pattern: /CARAMEL EUCALIPTO/i, category: 'dulces_snacks' }, // Caramelos sin azúcar
+  
+  // Frutas y verduras
+  { pattern: /CHERRY|T\.CHERRY/i, category: 'frutas_verduras' },
+  { pattern: /CEBOLLINO/i, category: 'frutas_verduras' },
+  { pattern: /ROMANA \d/i, category: 'frutas_verduras' }, // Lechuga romana
+  { pattern: /ENS\s|ENSALADA|TIERNA/i, category: 'frutas_verduras' }, // Ensaladas
+  { pattern: /RABANITOS/i, category: 'frutas_verduras' },
+  { pattern: /PE AGRIDULCE|REGA RED|ROJA ACIDULCE|ROJA DULCE/i, category: 'frutas_verduras' }, // Pimientos
+  { pattern: /R\. SERRANA/i, category: 'frutas_verduras' }, // Ensalada serrana
+  
+  // Higiene y limpieza
+  { pattern: /B\. BASURA|B\.ENVASES|BOLSAS DOGGYBAG/i, category: 'higiene_limpieza' },
+  { pattern: /BOLSAS ZIP/i, category: 'higiene_limpieza' },
+  { pattern: /WC POLVO|LIMPIADOR WC/i, category: 'higiene_limpieza' },
+  { pattern: /ABSORBEOLOR/i, category: 'higiene_limpieza' },
+  { pattern: /T\.INTIMAS|COTTONLIKE/i, category: 'higiene_limpieza' },
+  { pattern: /ANTI FRIZZ|CONTORNO OJOS/i, category: 'higiene_limpieza' },
+  { pattern: /PILA ALCALINA|COMPRIMIDOS VIT|MAGNESIO EFERV/i, category: 'higiene_limpieza' }, // Pilas y suplementos
+  { pattern: /PLATO POINSETTIA|VASO NAVIDAD|RECIPIENTES|COPA CAVA/i, category: 'otros' }, // Menaje/decoración
+  { pattern: /BOLSA PLASTICO|BOLSA RAFIA/i, category: 'otros' }, // Bolsas reutilizables
+  
+  // Proteínas - carnes y pescados específicos
+  { pattern: /CLARA LIQUIDA/i, category: 'proteinas' },
+  { pattern: /BURGER BERENJENA|BURGER CALABAZA|BURGER ESPINACAS/i, category: 'frutas_verduras' }, // Burgers vegetales
+  { pattern: /TABLA PATE|PATE DE/i, category: 'proteinas' },
+  { pattern: /B\.MIXTA|CONCHA FINA/i, category: 'proteinas' }, // Embutidos
+  
+  // Bebidas - zumos y bebidas con frutas
+  { pattern: /BEBIDA ARANDANOS|BEBIDA DE/i, category: 'bebidas' },
+  { pattern: /B\. ESPELT/i, category: 'bebidas' },
+  { pattern: /\bMANZANILLA\b/i, category: 'bebidas' }, // Infusión de manzanilla
+  { pattern: /LIQ\.\s*\+PRO/i, category: 'bebidas' }, // Bebida líquida +proteína
+];
+
 // Categories configuration (same as Python)
 const CATEGORIES_CONFIG = {
   proteinas: {
@@ -24,10 +130,11 @@ const CATEGORIES_CONFIG = {
               "CECINA", "SALMON", "SALMÓN", "HUEVO", "HUEVOS", "CHULETA", "CONTRAMUSLO",
               "LOMO", "FILETE", "ATÚN", "ATUN", "MERLUZA", "TRUCHA", "DORADA", "LUBINA",
               "MORTADELA", "LONGANIZA", "SALCHICHA", "FRANKFURT", "ALBÓNDIGA", "ALBONDIGA",
-              "NUGGETS", "CROQUETAS", "LANGOSTINO", "GAMBA", "CALAMAR", "MEJILLON",
+              "LANGOSTINO", "GAMBA", "CALAMAR", "MEJILLON",
               "SARDINA", "CHIPIRON", "MEDALLON", "RODAJA", "SERRANO", "CORTADO A CUCHILLO",
               "KEBAB", "TIRAS POLLO", "MUSLITO", "CODILLO", "CARRILLERA", "RELLENITO",
-              "BROCHETA", "JAMONCITO", "FIAMBRE", "RESERVA TAPAS", "FUET", "COMPANGO"]
+              "BROCHETA", "JAMONCITO", "FIAMBRE", "RESERVA TAPAS", "FUET", "COMPANGO",
+              "BOQUERONES", "ANCHOAS", "BACALAO", "SEPIA", "PULPO", "RAPE"]
   },
   lacteos: {
     name: "Lácteos",
@@ -35,7 +142,7 @@ const CATEGORIES_CONFIG = {
     color: "#f39c12",
     keywords: ["LECHE", "QUESO", "YOGUR", "KÉFIR", "KEFIR", "COTTAGE", "MOZZARELLA",
               "MANTEQUILLA", "NATA", "BURRATA", "FETA", "GRIEGO", "BÍFIDUS", "BIFIDUS",
-              "ALPRO", "SOJA", "+PROT", "PROTEÍNA", "PROTEINA", "PROTEIN"]
+              "ALPRO", "SOJA", "CUAJADA", "REQUESÓN", "REQUESON", "SKYR"]
   },
   frutas_verduras: {
     name: "Frutas y Verduras",
@@ -50,7 +157,9 @@ const CATEGORIES_CONFIG = {
               "CIRUELA", "MELON", "MELÓN", "SANDÍA", "SANDIA", "PIÑA", "BREVAS",
               "UVA", "LIMA", "GUACAMOLE", "GAZPACHO", "SALMOREJO", "CALABAZA",
               "ESPARRAGO", "ESPÁRRAGO", "GUISANTES", "JUDÍA", "JUDIA", "ICEBERG",
-              "CANÓNIGOS", "ALBAHACA", "PEREJIL", "DÁTIL", "DATIL", "REMOLACHA"]
+              "CANÓNIGOS", "ALBAHACA", "PEREJIL", "DÁTIL", "DATIL", "REMOLACHA",
+              "BERENJENA", "CASTAÑAS", "ARREGLO PUCHERO", "PUERRO", "COL ", "REPOLLO",
+              "NECTARINA", "MELOCOTÓN", "MELOCOTON", "PARAGUAYO", "GRANADA", "PAPAYA"]
   },
   bebidas: {
     name: "Bebidas",
@@ -58,7 +167,9 @@ const CATEGORIES_CONFIG = {
     color: "#3498db",
     keywords: ["COLA", "AGUA", "CERVEZA", "ZUMO", "CAFÉ", "CAFE", "TÓNICA", "TONICA",
               "SPRITE", "LIMONADA", "ISOTONIC", "ENERG", "RADLER", "VINO", "GINEBRA",
-              "VERMOUTH", "BEBIDA", "NECTAR", "ANTIOX", "SHOT"]
+              "VERMOUTH", "BEBIDA", "NECTAR", "ANTIOX", "SHOT", "CAVA", "CHAMPAGNE",
+              "SIDRA", "WHISKY", "RON ", "VODKA", "LICOR", "SANGRÍA", "SANGRIA",
+              "TÉ ", "TE ", "INFUSION", "MANZANILLA", "POLEO"]
   },
   congelados: {
     name: "Congelados",
@@ -67,45 +178,61 @@ const CATEGORIES_CONFIG = {
     keywords: ["PIZZA", "NUGGETS", "LASAÑA", "LASANA", "EMPANADA", "CANELONES", "CANELON",
               "CANELÓN", "WAFFLE", "PATATAS GAJO", "PATATAS HORNO", "TEQUEÑOS", "TEMPURA",
               "FIGURITAS", "CROQUETAS", "ARROZ TRES", "BENTO", "POKE", "CONGELAD",
-              "HIELO", "WONTON", "EMPANADO", "ÑOQUIS"]
+              "HIELO", "WONTON", "EMPANADO", "ÑOQUIS", "SAN JACOBO", "GYOZAS"]
   },
   despensa: {
     name: "Despensa",
     icon: "",
     color: "#1abc9c",
     keywords: ["ARROZ", "PASTA", "MACARRON", "SPAGHETTI", "PENNE", "HELICES", "PAJARITAS",
-              "FIDEOS", "FIDEO", "ACEITE", "TOMATE FRITO", "TOMATE TRITURADO", "SAL",
+              "FIDEOS", "FIDEO", "ACEITE", "TOMATE FRITO", "TOMATE TRITURADO", "SAL ",
               "HARINA", "AZUCAR", "AZÚCAR", "LEGUMBRE", "GARBANZO", "LENTEJA", "FABADA",
               "COCIDO", "CALDO", "SOPA", "CREMA DE", "TORTILLA", "PAN ", "PANECILLO",
-              "BARRA", "CROISSANT", "NAPOLITANA", "NACHOS", "CRACKERS", "MOSTAZA",
+              "BARRA", "NAPOLITANA", "NACHOS", "CRACKERS", "MOSTAZA",
               "MAYONESA", "ALLIOLI", "SALSA", "HUMMUS", "TSATSIKI", "ACEITUNA",
-              "MEJILLONES ESCAB", "SARDINAS", "CABALLA", "ALMEJONES", "WAKAME",
-              "MIEL", "LEVADURA", "ESPECIAS", "CANELA", "PIMIENTA", "LAUREL"]
+              "MEJILLONES ESCAB", "MEJILLÓN ESCAB", "MEJIL.", "SARDINAS", "CABALLA", 
+              "ALMEJONES", "WAKAME", "MIEL", "LEVADURA", "ESPECIAS", "CANELA", 
+              "PIMIENTA", "LAUREL", "INTEGRAL", "AVENA", "QUINOA", "COUS", "SEMOLA", 
+              "TAPIOCA", "VINAGRE", "PIMENTON", "OREGANO", "TOMILLO", "ROMERO", "CURRY",
+              "BICARBONATO", "MAIZENA", "PAN RALLADO", "RELLENO", "IMPULSOR", "ROYAL",
+              "PREPARADO", "FIDEUA", "FUMET", "HIERBAS", "CLAVO", "LINO", "CHÍA",
+              "MAIZ DULCE", "MACEDONIA", "PAISANA", "PAELLA", "CREPES", "PULGUITAS",
+              "ENCURTIDOS", "AROMA", "BANDERILLA", "GILDA", "HUMUS"]
   },
   dulces_snacks: {
     name: "Dulces y Snacks",
     icon: "",
     color: "#e67e22",
-    keywords: ["CHOCOLATE", "CHOCO", "GALLETA", "CROISSANT", "BERLINA", "BOMBON",
+    keywords: ["CHOCOLATE", "CHOCO", "GALLETA", "GALL", "BOMBON",
               "TURRON", "TURRÓN", "POLVORON", "POLVORÓN", "GOLOSINA", "GOMINOLA",
               "CARAMELO", "CHICLE", "CACAHUETE", "SNACK", "CHEETOS", "DORITOS",
-              "COCKTAIL", "FRUTOS SECOS", "NUEZ", "HELADO", "CONO", "GRANIZADO",
-              "PANETTONE", "PANDORO", "MAZAPAN", "MAZAPÁN", "ROSCÓN", "ROSCON",
-              "BARRITA", "STICKS", "COOKIES", "DIGESTIVE", "MINIS LECHE", "KIT-KAT",
-              "SUPERSANDWICH", "MINISANDWICH", "COULANT", "MOUSSE"]
+              "COCKTAIL", "FRUTOS SECOS", "FRUTOS ROJOS", "NUEZ", "HELADO", "CONO", 
+              "GRANIZADO", "PANETTONE", "PANDORO", "MAZAPAN", "MAZAPÁN", "ROSCÓN", 
+              "ROSCON", "BARRITA", "STICKS", "COOKIES", "DIGESTIVE", "MINIS LECHE", 
+              "KIT-KAT", "SUPERSANDWICH", "MINISANDWICH", "COULANT", "MOUSSE", "XUXES",
+              "ROCHER", "LINDOR", "FERRERO", "KINDER", "OREO", "CHIPS AHOY",
+              "PALMERA", "CROISSANT", "BERLINA", "ENSAIMADA", "DONUT", "MAGDALENA",
+              "PELADILLA", "PERLAS", "DOCHI", "CHEESECAKE", "MINI BOMB", "FUSSION",
+              "DELIZZE", "NEGRO 72%", "NEGRO 99%", "DIGEST", "MINI SALADAS"]
   },
   higiene_limpieza: {
     name: "Higiene y Limpieza",
     icon: "",
     color: "#95a5a6",
-    keywords: ["PAPEL", "JABÓN", "JABON", "DETERGENTE", "GEL", "CHAMPÚ", "CHAMPU",
-              "DEO", "DESODORANTE", "CEPILLO", "PASTA DENT", "COLG", "ENJUAGUE",
-              "SUAVIZANTE", "LAVAVAJILLAS", "LIMPIA", "ESTROPAJO", "FREGONA",
-              "BOLSA BASURA", "ROLLO", "SERVILLETA", "TOALLITA", "PAÑUELO", "PANUELO",
-              "BASTONCILLO", "DISCO", "ESPONJA", "FILM", "ALUMINIO", "SPRAY",
-              "AMBIENTADOR", "VELA", "PERFUME", "EDP", "COLONIA", "CREMA", "MASCARILLA",
-              "MAQUILLAJE", "MASCARA", "LABIAL", "MAQUINILLA", "COMP.", "PAÑAL",
-              "GASAS", "T.HIDROALC", "LÁGRIMAS", "PROTECTOR"]
+    keywords: ["PAPEL", "JABÓN", "JABON", "DETERGENTE", "DET ", "GEL BAÑO", "CHAMPÚ", 
+              "CHAMPU", "DEO", "DESODORANTE", "CEPILLO", "PASTA DENT", "COLG", 
+              "ENJUAGUE", "SUAVIZANTE", "LAVAVAJILLAS", "LIMPIA", "ESTROPAJO", 
+              "FREGONA", "FRIEGA", "BOLSA BASURA", "B. BASURA", "B.ENVASES", "ROLLO", 
+              "SERVILLETA", "TOALLITA", "PAÑUELO", "PANUELO", "BASTONCILLO", "DISCO", 
+              "ESPONJA", "FILM", "ALUMINIO", "SPRAY", "AMBIENTADOR", "AMB.", "VELA", 
+              "PERFUME", "EDP", "COLONIA", "CREMA", "MASCARILLA", "MAQUILLAJE", 
+              "MASCARA", "LABIAL", "MAQUINILLA", "COMP.", "PAÑAL", "GASAS", 
+              "T.HIDROALC", "LÁGRIMAS", "PROTECTOR", "BOLSAS ZIP", "WC ",
+              "ABSORBEOLOR", "COTTONLIKE", "T.INTIMAS", "COMPRESAS", "TAMPONES",
+              "MULTIUSOS", "PASTILLA LEJIA", "CÁPSULA ROPA", "ESPUMA RIZOS", 
+              "HIALURONICO", "INSTANT COND", "REFILL", "PLUMERO", "POSAVAJILLAS",
+              "SUERO FISIO", "ESTERIL", "GEL HIAL", "P. COLORCOR", "STICK DENTAL",
+              "T.MULTI", "MULTI.LIM"]
   },
   otros: {
     name: "Otros",
@@ -117,10 +244,19 @@ const CATEGORIES_CONFIG = {
 
 /**
  * Categorize a product based on its name
+ * Uses priority rules first, then keyword matching
  */
 function categorizeProduct(name) {
   const nameUpper = name.toUpperCase();
   
+  // PASO 1: Evaluar reglas de prioridad primero (patrones específicos)
+  for (const rule of PRIORITY_RULES) {
+    if (rule.pattern.test(nameUpper)) {
+      return rule.category;
+    }
+  }
+  
+  // PASO 2: Buscar coincidencia por keywords en orden de categorías
   for (const [catKey, catInfo] of Object.entries(CATEGORIES_CONFIG)) {
     if (catKey === 'otros') continue;
     
@@ -507,11 +643,42 @@ function buildTicketsData(tickets) {
     meta: {
       lastUpdated: new Date().toISOString().split('T')[0],
       totalTickets: tickets.length,
-      currency: "EUR"
+      currency: "EUR",
+      parserVersion: PARSER_VERSION
     },
     categories: categories,
     tickets: tickets
   };
+}
+
+/**
+ * Migrate tickets data from older parser versions
+ * Re-categorizes all products using current categorization logic
+ */
+function migrateTicketsData(data) {
+  const currentVersion = data?.meta?.parserVersion;
+  
+  if (currentVersion === PARSER_VERSION) {
+    return { data, migrated: false };
+  }
+  
+  console.log(`Migrating tickets from version ${currentVersion || 'unknown'} to ${PARSER_VERSION}`);
+  
+  const tickets = data.tickets || data;
+  
+  // Re-categorize all products
+  for (const ticket of tickets) {
+    for (const item of ticket.items) {
+      item.category = categorizeProduct(item.name);
+    }
+  }
+  
+  // Rebuild data structure with updated version
+  const migratedData = buildTicketsData(tickets);
+  
+  console.log(`Migration complete: ${tickets.length} tickets updated to parser v${PARSER_VERSION}`);
+  
+  return { data: migratedData, migrated: true };
 }
 
 /**

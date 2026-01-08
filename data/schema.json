@@ -22,6 +22,10 @@
           "type": "string", 
           "default": "EUR",
           "description": "Moneda de los precios"
+        },
+        "parserVersion": {
+          "type": "string",
+          "description": "Versión del parser usado para categorizar productos. Si no existe o es diferente a la versión actual, los datos se migrarán automáticamente."
         }
       },
       "required": ["lastUpdated", "totalTickets", "currency"]

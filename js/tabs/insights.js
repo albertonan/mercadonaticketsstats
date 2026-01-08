@@ -69,7 +69,7 @@ function renderPriceAlerts(tickets) {
               <span class="alert-product-name">${truncate(a.name, 25)}</span>
               <span class="alert-price-details">
                 <span class="alert-diff">${sign}${formatCurrency(diff)}</span> 
-                <span class="alert-new-price">(New: ${formatCurrency(a.lastPrice)})</span>
+                <span class="alert-new-price">(Nuevo: ${formatCurrency(a.lastPrice)})</span>
               </span>
           </div>
           <div class="alert-arrow">${icon}</div>
