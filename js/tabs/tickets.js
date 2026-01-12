@@ -10,13 +10,13 @@ let ticketsSearch = '';
 
 function renderTicketsList() {
   const tickets = getFilteredTickets();
-  
+
   // Setup search and sort
   setupTicketsControls();
-  
+
   // Render stats
   renderTicketsStats(tickets);
-  
+
   // Render ticket list
   updateTicketsList(tickets);
 }
@@ -25,7 +25,7 @@ function setupTicketsControls() {
   const searchInput = document.getElementById('ticketSearch');
   const sortSelect = document.getElementById('ticketSort');
   const perPageSelect = document.getElementById('ticketsPerPage');
-  
+
   if (searchInput) {
     searchInput.value = ticketsSearch;
     searchInput.addEventListener('input', debounce(() => {
@@ -34,7 +34,7 @@ function setupTicketsControls() {
       updateTicketsList(getFilteredTickets());
     }, 300));
   }
-  
+
   if (sortSelect) {
     sortSelect.value = ticketsSort;
     sortSelect.addEventListener('change', () => {
@@ -43,7 +43,7 @@ function setupTicketsControls() {
       updateTicketsList(getFilteredTickets());
     });
   }
-  
+
   if (perPageSelect) {
     perPageSelect.value = ticketsPerPage;
     perPageSelect.addEventListener('change', () => {
@@ -57,12 +57,12 @@ function setupTicketsControls() {
 function renderTicketsStats(tickets) {
   const container = document.getElementById('ticketsStats');
   if (!container) return;
-  
+
   const total = tickets.reduce((sum, t) => sum + t.total, 0);
   const avgTicket = tickets.length > 0 ? total / tickets.length : 0;
   const maxTicket = tickets.length > 0 ? Math.max(...tickets.map(t => t.total)) : 0;
   const totalItems = tickets.reduce((sum, t) => sum + (t.items?.length || 0), 0);
-  
+
   container.innerHTML = `
     <div class="stat-card">
       <div class="stat-content">
@@ -96,15 +96,15 @@ function updateTicketsList(tickets) {
   let filtered = tickets;
   if (ticketsSearch) {
     const query = ticketsSearch.toLowerCase();
-    filtered = tickets.filter(t => 
+    filtered = tickets.filter(t =>
       t.store?.toLowerCase().includes(query) ||
       t.date?.includes(query) ||
       t.items?.some(i => i.name?.toLowerCase().includes(query))
     );
   }
-  
+
   // Sort
-  switch(ticketsSort) {
+  switch (ticketsSort) {
     case 'date-asc':
       filtered.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
       break;
@@ -120,17 +120,17 @@ function updateTicketsList(tickets) {
     default: // date-desc
       filtered.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
   }
-  
+
   // Pagination
   const totalPages = Math.ceil(filtered.length / ticketsPerPage);
   const startIndex = (ticketsCurrentPage - 1) * ticketsPerPage;
   const endIndex = startIndex + ticketsPerPage;
   const pageTickets = filtered.slice(startIndex, endIndex);
-  
+
   // Render list
   const container = document.getElementById('ticketListContainer');
   if (!container) return;
-  
+
   if (filtered.length === 0) {
     container.innerHTML = `
       <div style="text-align: center; padding: 40px; color: var(--text-muted);">
@@ -139,7 +139,7 @@ function updateTicketsList(tickets) {
     `;
     return;
   }
-  
+
   container.innerHTML = `
     <div class="ticket-grid">
       ${pageTickets.map((t, i) => `
@@ -180,34 +180,34 @@ function changeTicketsPage(delta) {
   let filtered = tickets;
   if (ticketsSearch) {
     const query = ticketsSearch.toLowerCase();
-    filtered = tickets.filter(t => 
+    filtered = tickets.filter(t =>
       t.store?.toLowerCase().includes(query) ||
       t.date?.includes(query) ||
       t.items?.some(i => i.name?.toLowerCase().includes(query))
     );
   }
   const totalPages = Math.ceil(filtered.length / ticketsPerPage);
-  
+
   ticketsCurrentPage = Math.max(1, Math.min(totalPages, ticketsCurrentPage + delta));
   updateTicketsList(tickets);
 }
 
 function showTicketDetail(index) {
   const tickets = getFilteredTickets();
-  
+
   // Apply same filters as list
   let filtered = tickets;
   if (ticketsSearch) {
     const query = ticketsSearch.toLowerCase();
-    filtered = tickets.filter(t => 
+    filtered = tickets.filter(t =>
       t.store?.toLowerCase().includes(query) ||
       t.date?.includes(query) ||
       t.items?.some(i => i.name?.toLowerCase().includes(query))
     );
   }
-  
+
   // Apply same sort as list
-  switch(ticketsSort) {
+  switch (ticketsSort) {
     case 'date-asc':
       filtered.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
       break;
@@ -223,10 +223,10 @@ function showTicketDetail(index) {
     default:
       filtered.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
   }
-  
+
   const ticket = filtered[index];
   if (!ticket) return;
-  
+
   // Group items by category
   const byCategory = {};
   (ticket.items || []).forEach(item => {
@@ -234,12 +234,12 @@ function showTicketDetail(index) {
     if (!byCategory[cat]) byCategory[cat] = [];
     byCategory[cat].push(item);
   });
-  
+
   const modal = document.getElementById('ticketModal');
   const content = document.getElementById('ticketModalContent');
-  
+
   if (!modal || !content) return;
-  
+
   content.innerHTML = `
     <div class="modal-header">
       <h2>Ticket del ${formatDate(ticket.date)}</h2>
@@ -282,7 +282,7 @@ function showTicketDetail(index) {
       </div>
     </div>
   `;
-  
+
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -300,14 +300,14 @@ function deleteTicket(index) {
   let filtered = tickets;
   if (ticketsSearch) {
     const query = ticketsSearch.toLowerCase();
-    filtered = tickets.filter(t => 
+    filtered = tickets.filter(t =>
       t.store?.toLowerCase().includes(query) ||
       t.date?.includes(query) ||
       t.items?.some(i => i.name?.toLowerCase().includes(query))
     );
   }
-  
-  switch(ticketsSort) {
+
+  switch (ticketsSort) {
     case 'date-asc':
       filtered.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
       break;
@@ -323,22 +323,35 @@ function deleteTicket(index) {
     default:
       filtered.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
   }
-  
+
   const ticket = filtered[index];
   if (!ticket) return;
-  
+
   if (!confirm(`¿Estás seguro de que quieres borrar el ticket del ${formatDate(ticket.date)} (${formatCurrency(ticket.total)})?`)) {
     return;
   }
-  
+
   // Find and remove from ticketsData
-  const ticketIndex = ticketsData.findIndex(t => 
-    t.date === ticket.date && t.time === ticket.time && t.total === ticket.total
-  );
-  
+  // Try to find by ID first, then fallback to props
+  let ticketIndex = -1;
+  if (ticket.id) {
+    ticketIndex = ticketsData.findIndex(t => t.id === ticket.id);
+  }
+  if (ticketIndex === -1) {
+    ticketIndex = ticketsData.findIndex(t =>
+      t.date === ticket.date && t.time === ticket.time && t.total === ticket.total
+    );
+  }
+
   if (ticketIndex !== -1) {
+    const deletedTicket = ticketsData[ticketIndex];
     ticketsData.splice(ticketIndex, 1);
-    
+
+    // Remove raw text if exists (PREVENTS RESURRECTION ON RELOAD)
+    if (deletedTicket.id && typeof removeRawText === 'function') {
+      removeRawText(deletedTicket.id);
+    }
+
     // Update fullData
     if (fullData) {
       if (fullData.tickets) {
@@ -347,18 +360,18 @@ function deleteTicket(index) {
         fullData = ticketsData;
       }
     }
-    
-    // Save to localStorage
+
+    // Save to localStorage (use correct key!)
     try {
-      localStorage.setItem('mercadona_tickets_data', JSON.stringify(fullData));
+      localStorage.setItem('shopping_tickets_data', JSON.stringify(fullData));
     } catch (e) {
       console.warn('Could not save to localStorage');
     }
-    
+
     // Close modal and refresh
     closeTicketModal();
     renderTicketsList();
-    updatePeriodInfo();
+    updatePeriodInfo(); // Update global stats
   }
 }
 
@@ -367,14 +380,14 @@ function copyTicketToClipboard(index) {
   let filtered = tickets;
   if (ticketsSearch) {
     const query = ticketsSearch.toLowerCase();
-    filtered = tickets.filter(t => 
+    filtered = tickets.filter(t =>
       t.store?.toLowerCase().includes(query) ||
       t.date?.includes(query) ||
       t.items?.some(i => i.name?.toLowerCase().includes(query))
     );
   }
-  
-  switch(ticketsSort) {
+
+  switch (ticketsSort) {
     case 'date-asc':
       filtered.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
       break;
@@ -390,23 +403,23 @@ function copyTicketToClipboard(index) {
     default:
       filtered.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
   }
-  
+
   const ticket = filtered[index];
   if (!ticket) return;
-  
+
   let text = `MERCADONA - ${ticket.store || 'Tienda'}\n`;
   text += `Fecha: ${formatDate(ticket.date)}\n`;
   text += `Hora: ${ticket.time || 'N/A'}\n`;
   text += `${'─'.repeat(40)}\n\n`;
-  
+
   (ticket.items || []).forEach(i => {
     text += `${i.name}\n`;
     text += `  ${i.quantity || 1}x ${formatCurrency(i.unitPrice || i.price)} = ${formatCurrency(i.price)}\n`;
   });
-  
+
   text += `\n${'─'.repeat(40)}\n`;
   text += `TOTAL: ${formatCurrency(ticket.total)}\n`;
-  
+
   navigator.clipboard.writeText(text).then(() => {
     alert('Ticket copiado al portapapeles');
   }).catch(() => {

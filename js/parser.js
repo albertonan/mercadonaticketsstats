@@ -630,6 +630,25 @@ function clearRawTexts() {
 }
 
 /**
+ * Remove a specific raw text by invoice ID
+ */
+function removeRawText(invoiceId) {
+  try {
+    const existing = getRawTexts();
+    if (existing[invoiceId]) {
+      delete existing[invoiceId];
+      localStorage.setItem(RAW_TEXTS_KEY, JSON.stringify(existing));
+      console.log(`Removed raw text for ${invoiceId}`);
+      return true;
+    }
+    return false;
+  } catch (e) {
+    console.warn('Could not remove raw text:', e.message);
+    return false;
+  }
+}
+
+/**
  * Re-parse tickets from stored raw texts
  */
 function reparseFromRawTexts() {
