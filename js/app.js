@@ -1,5 +1,5 @@
 /* ============================================
-   MERCADONA STATS - MAIN APPLICATION
+   SHOPPING STATS - MAIN APPLICATION
    ============================================ */
 
 // Global state
@@ -10,7 +10,7 @@ let fullData = null; // Complete data including categories
 
 // App version - increment to force cache clear
 const APP_VERSION = '2.1.0';
-const APP_VERSION_KEY = 'mercadona_app_version';
+const APP_VERSION_KEY = 'shopping_app_version';
 
 // Note: charts registry is defined in js/charts.js
 
@@ -19,7 +19,8 @@ function checkAppVersion() {
   const savedVersion = localStorage.getItem(APP_VERSION_KEY);
   if (savedVersion !== APP_VERSION) {
     console.log(`App updated from ${savedVersion || 'unknown'} to ${APP_VERSION}, clearing old cache...`);
-    clearAllData();
+    // Don't clear data on version update, just UI state
+    localStorage.removeItem('shopping_active_tab');
     localStorage.setItem(APP_VERSION_KEY, APP_VERSION);
     return true; // Version changed
   }
@@ -29,10 +30,17 @@ function checkAppVersion() {
 // Clear all localStorage data (keeps raw texts for re-parsing)
 function clearAllData() {
   const keysToRemove = [
+    'shopping_tickets_data',
+    'shopping_active_tab',
+    'shopping_year_filter',
+    'shopping_store_filter',
+    'shopping_budget',
+    // Legacy keys
     'mercadona_tickets_data',
     'mercadona_active_tab',
     'mercadona_year_filter',
-    'mercadona_budget'
+    'mercadona_budget',
+    'mercadona_theme'
   ];
   keysToRemove.forEach(key => localStorage.removeItem(key));
   ticketsData = [];
@@ -54,7 +62,7 @@ function clearEverything() {
 function validateTicketDates(tickets) {
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   let fixed = 0;
-  
+
   tickets.forEach(t => {
     if (t.date && !dateRegex.test(t.date)) {
       // Try to fix DD/MM/YYYY format
@@ -65,7 +73,7 @@ function validateTicketDates(tickets) {
       }
     }
   });
-  
+
   if (fixed > 0) {
     console.log(`Fixed ${fixed} tickets with old date format`);
   }
@@ -75,12 +83,12 @@ function validateTicketDates(tickets) {
 // Initialize application
 async function init() {
   setupDarkMode();
-  
+
   // Check for version update (clears cache if needed)
   const versionChanged = checkAppVersion();
-  
+
   const hasData = await tryLoadData();
-  
+
   if (!hasData) {
     showDataLoaderModal();
   } else {
@@ -95,15 +103,15 @@ async function tryLoadData() {
     const response = await fetch('data/tickets.json');
     if (response.ok) {
       let data = await response.json();
-      
+
       // Check if migration needed
       const { data: migratedData, migrated } = migrateTicketsData(data);
       fullData = migratedData;
       ticketsData = fullData.tickets || fullData;
-      
+
       // Validate and fix date formats
       ticketsData = validateTicketDates(ticketsData);
-      
+
       if (ticketsData && ticketsData.length > 0) {
         console.log(`Loaded ${ticketsData.length} tickets from file${migrated ? ' (migrated)' : ''}`);
         return true;
@@ -112,27 +120,41 @@ async function tryLoadData() {
   } catch (error) {
     console.log('No tickets.json file found');
   }
-  
+
   // Try localStorage as fallback
   try {
-    const savedData = localStorage.getItem('mercadona_tickets_data');
+    // Try new key first
+    let savedData = localStorage.getItem('shopping_tickets_data');
+    let legacyData = false;
+
+    // Fallback to legacy key
+    if (!savedData) {
+      savedData = localStorage.getItem('mercadona_tickets_data');
+      if (savedData) legacyData = true;
+    }
+
     if (savedData) {
       let data = JSON.parse(savedData);
-      
+
       // Check if migration needed and migrate
       const { data: migratedData, migrated } = migrateTicketsData(data);
       fullData = migratedData;
       ticketsData = fullData.tickets || fullData;
-      
+
       // Validate and fix date formats
       ticketsData = validateTicketDates(ticketsData);
-      
+
       if (ticketsData && ticketsData.length > 0) {
-        // If migrated, save back to localStorage
-        if (migrated) {
+        // If migrated or legacy, save back to new localStorage key
+        if (migrated || legacyData) {
           try {
-            localStorage.setItem('mercadona_tickets_data', JSON.stringify(fullData));
-            console.log('Migrated data saved to localStorage');
+            localStorage.setItem('shopping_tickets_data', JSON.stringify(fullData));
+            if (legacyData) {
+              localStorage.removeItem('mercadona_tickets_data');
+              console.log('Migrated legacy localStorage data to new key');
+            } else {
+              console.log('Migrated data saved to localStorage');
+            }
           } catch (e) {
             console.warn('Could not save migrated data to localStorage');
           }
@@ -144,7 +166,7 @@ async function tryLoadData() {
   } catch (error) {
     console.log('No data in localStorage');
   }
-  
+
   return false;
 }
 
@@ -153,10 +175,10 @@ function startApp() {
   setupFilters();
   setupExport();
   setupTabs();
-  
+
   // Update period info
   updatePeriodInfo();
-  
+
   // Setup reload data button
   const reloadBtn = document.getElementById('reloadDataBtn');
   if (reloadBtn) {
@@ -164,11 +186,11 @@ function startApp() {
       showDataLoaderModal();
     });
   }
-  
+
   // Restore last active tab
-  const savedTab = localStorage.getItem('mercadona_active_tab') || 'overview';
+  const savedTab = localStorage.getItem('shopping_active_tab') || 'overview';
   switchTab(savedTab);
-  
+
   // Log raw texts info
   if (typeof getRawTexts === 'function') {
     const rawTexts = getRawTexts();
@@ -177,8 +199,8 @@ function startApp() {
       console.log(`📄 ${count} raw PDF texts stored for future re-parsing`);
     }
   }
-  
-  console.log('Mercadona Stats initialized');
+
+  console.log('Shopping Stats initialized');
 }
 
 // Update period info display
@@ -221,7 +243,7 @@ function setupDataLoaderHandlers() {
   const closeModalBtn = document.getElementById('closeModalBtn');
   const jsonConfirmBtn = document.getElementById('jsonConfirmBtn');
   const jsonWarning = document.getElementById('jsonWarning');
-  
+
   // Close modal button
   if (closeModalBtn) {
     closeModalBtn.addEventListener('click', () => {
@@ -230,7 +252,7 @@ function setupDataLoaderHandlers() {
       if (jsonWarning) jsonWarning.style.display = 'none';
     });
   }
-  
+
   // JSON confirm button (accept replacement)
   if (jsonConfirmBtn) {
     jsonConfirmBtn.addEventListener('click', async () => {
@@ -240,7 +262,7 @@ function setupDataLoaderHandlers() {
       }
     });
   }
-  
+
   // JSON file input
   if (jsonInput) {
     jsonInput.addEventListener('change', async (e) => {
@@ -250,19 +272,19 @@ function setupDataLoaderHandlers() {
       }
     });
   }
-  
+
   // PDF file input
   if (pdfInput) {
     pdfInput.addEventListener('change', (e) => {
       updatePdfFileList(e.target.files);
     });
   }
-  
+
   // Process PDFs button
   if (processBtn) {
     processBtn.addEventListener('click', handlePDFProcess);
   }
-  
+
   // Setup dropzones
   setupDropzone(jsonDropzone, jsonInput, 'json');
   setupDropzone(pdfDropzone, pdfInput, 'pdf');
@@ -271,22 +293,22 @@ function setupDataLoaderHandlers() {
 // Setup drag and drop
 function setupDropzone(dropzone, input, type) {
   if (!dropzone) return;
-  
+
   ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
     dropzone.addEventListener(event, (e) => {
       e.preventDefault();
       e.stopPropagation();
     });
   });
-  
+
   ['dragenter', 'dragover'].forEach(event => {
     dropzone.addEventListener(event, () => dropzone.classList.add('dragover'));
   });
-  
+
   ['dragleave', 'drop'].forEach(event => {
     dropzone.addEventListener(event, () => dropzone.classList.remove('dragover'));
   });
-  
+
   dropzone.addEventListener('drop', async (e) => {
     const files = e.dataTransfer.files;
     if (type === 'json' && files.length > 0) {
@@ -297,13 +319,13 @@ function setupDropzone(dropzone, input, type) {
       const existingFiles = document.getElementById('pdfFileInput').files;
       for (const f of existingFiles) dt.items.add(f);
       for (const f of files) {
-        if (f.type === 'application/pdf') dt.items.add(f);
+        if (f.type === 'application/pdf' || f.type.startsWith('image/')) dt.items.add(f);
       }
       document.getElementById('pdfFileInput').files = dt.files;
       updatePdfFileList(dt.files);
     }
   });
-  
+
   dropzone.addEventListener('click', () => input?.click());
 }
 
@@ -315,7 +337,7 @@ async function handleJSONUpload(file) {
   const status = document.getElementById('jsonStatus');
   const warning = document.getElementById('jsonWarning');
   const warningText = warning?.querySelector('.warning-text');
-  
+
   // Check if there are existing tickets and show warning
   if (ticketsData && ticketsData.length > 0) {
     pendingJSONFile = file;
@@ -325,7 +347,7 @@ async function handleJSONUpload(file) {
     }
     return;
   }
-  
+
   await processJSONFile(file);
 }
 
@@ -333,37 +355,37 @@ async function handleJSONUpload(file) {
 async function processJSONFile(file) {
   const status = document.getElementById('jsonStatus');
   const warning = document.getElementById('jsonWarning');
-  
+
   // Hide warning if visible
   if (warning) warning.style.display = 'none';
-  
+
   try {
     status.innerHTML = '<span class="loading-spinner"></span> Cargando...';
-    
+
     const text = await file.text();
     const data = JSON.parse(text);
-    
+
     fullData = data;
     ticketsData = data.tickets || data;
-    
+
     if (!ticketsData || ticketsData.length === 0) {
       throw new Error('No se encontraron tickets en el archivo');
     }
-    
+
     status.innerHTML = `<span class="success">${ticketsData.length} tickets cargados correctamente</span>`;
-    
+
     // Save to localStorage for persistence
     try {
-      localStorage.setItem('mercadona_tickets_data', JSON.stringify(fullData));
+      localStorage.setItem('shopping_tickets_data', JSON.stringify(fullData));
     } catch (e) {
       console.warn('Could not save to localStorage (data too large)');
     }
-    
+
     setTimeout(() => {
       hideDataLoaderModal();
       startApp();
     }, 1000);
-    
+
   } catch (error) {
     status.innerHTML = `<span class="error">Error: ${error.message}</span>`;
   }
@@ -373,13 +395,13 @@ async function processJSONFile(file) {
 function updatePdfFileList(files) {
   const listEl = document.getElementById('pdfFileList');
   const processBtn = document.getElementById('processPdfsBtn');
-  
+
   if (files.length === 0) {
     listEl.innerHTML = '<p class="text-muted">No hay archivos seleccionados</p>';
     processBtn.disabled = true;
     return;
   }
-  
+
   listEl.innerHTML = `
     <p><strong>${files.length} archivo(s) seleccionado(s):</strong></p>
     <ul class="file-list">
@@ -390,55 +412,78 @@ function updatePdfFileList(files) {
   processBtn.disabled = false;
 }
 
-// Handle PDF processing
+// Handle File processing (PDFs and Images)
 async function handlePDFProcess() {
   const pdfInput = document.getElementById('pdfFileInput');
-  const files = pdfInput.files;
+  const files = Array.from(pdfInput.files);
   const progressEl = document.getElementById('pdfProgress');
   const processBtn = document.getElementById('processPdfsBtn');
-  
+
   if (files.length === 0) return;
-  
+
   processBtn.disabled = true;
   progressEl.style.display = 'block';
-  
+
   try {
-    const newTickets = await processPDFs(Array.from(files), (current, total, filename) => {
-      const percent = Math.round((current / total) * 100);
-      progressEl.innerHTML = `
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: ${percent}%"></div>
-        </div>
-        <p>Procesando ${current}/${total}: ${filename}</p>
-      `;
-    });
-    
-    if (newTickets.length === 0) {
-      throw new Error('No se pudieron extraer tickets de los PDFs');
+    const pdfFiles = files.filter(f => f.type === 'application/pdf');
+    const imageFiles = files.filter(f => f.type.startsWith('image/'));
+
+    let newTickets = [];
+
+    // Process PDFs
+    if (pdfFiles.length > 0) {
+      const pdfTickets = await processPDFs(pdfFiles, (current, total, filename) => {
+        const percent = Math.round((current / total) * 100);
+        progressEl.innerHTML = `
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${percent}%"></div>
+          </div>
+          <p>Procesando PDF ${current}/${total}: ${filename}</p>
+        `;
+      });
+      newTickets = newTickets.concat(pdfTickets);
     }
-    
+
+    // Process Images
+    if (imageFiles.length > 0) {
+      const imageTickets = await processImages(imageFiles, (current, total, filename) => {
+        const percent = Math.round((current / total) * 100);
+        progressEl.innerHTML = `
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${percent}%"></div>
+          </div>
+          <p>Procesando Imagen ${current}/${total}: ${filename}</p>
+        `;
+      });
+      newTickets = newTickets.concat(imageTickets);
+    }
+
+    if (newTickets.length === 0) {
+      throw new Error('No se pudieron extraer tickets de los archivos');
+    }
+
     // Merge with existing tickets, avoiding duplicates
     const existingTickets = ticketsData || [];
     const mergedTickets = mergeTickets(existingTickets, newTickets);
     const addedCount = mergedTickets.length - existingTickets.length;
     const duplicateCount = newTickets.length - addedCount;
-    
+
     fullData = buildTicketsData(mergedTickets);
     ticketsData = mergedTickets;
-    
+
     let statusMsg = `${addedCount} tickets nuevos añadidos`;
     if (duplicateCount > 0) {
       statusMsg += ` (${duplicateCount} duplicados ignorados)`;
     }
     progressEl.innerHTML = `<span class="success">${statusMsg}</span>`;
-    
+
     // Save to localStorage
     try {
-      localStorage.setItem('mercadona_tickets_data', JSON.stringify(fullData));
+      localStorage.setItem('shopping_tickets_data', JSON.stringify(fullData));
     } catch (e) {
       console.warn('Could not save to localStorage (data too large)');
     }
-    
+
     // Offer download
     setTimeout(() => {
       progressEl.innerHTML += `
@@ -448,12 +493,16 @@ async function handlePDFProcess() {
         </button>
       `;
     }, 500);
-    
+
     setTimeout(() => {
       hideDataLoaderModal();
       startApp();
     }, 2000);
-    
+
+    // Reset input
+    pdfInput.value = '';
+    updatePdfFileList([]);
+
   } catch (error) {
     progressEl.innerHTML = `<span class="error">Error: ${error.message}</span>`;
     processBtn.disabled = false;
@@ -463,10 +512,10 @@ async function handlePDFProcess() {
 // Merge tickets avoiding duplicates (by date + total + item count)
 function mergeTickets(existing, newTickets) {
   const getTicketKey = (t) => `${t.date}_${t.total.toFixed(2)}_${(t.items || []).length}`;
-  
+
   const existingKeys = new Set(existing.map(getTicketKey));
   const merged = [...existing];
-  
+
   for (const ticket of newTickets) {
     const key = getTicketKey(ticket);
     if (!existingKeys.has(key)) {
@@ -474,17 +523,17 @@ function mergeTickets(existing, newTickets) {
       existingKeys.add(key);
     }
   }
-  
+
   // Sort by date descending
   merged.sort((a, b) => b.date.localeCompare(a.date));
-  
+
   return merged;
 }
 
 // Download the generated JSON
 function downloadGeneratedJSON() {
   if (!fullData) return;
-  
+
   const json = JSON.stringify(fullData, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -513,7 +562,7 @@ function setupTabs() {
       switchTab(tabId);
     });
   });
-  
+
   // Handle browser back/forward
   window.addEventListener('popstate', (e) => {
     if (e.state?.tab) {
@@ -527,32 +576,32 @@ function switchTab(tabId, pushState = true) {
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabId);
   });
-  
+
   // Hide all tab contents
   document.querySelectorAll('.tab-content').forEach(content => {
     content.classList.remove('active');
   });
-  
+
   // Show selected tab content
   const tabContent = document.getElementById(`${tabId}Tab`);
   if (tabContent) {
     tabContent.classList.add('active');
   }
-  
+
   // Save to localStorage
-  localStorage.setItem('mercadona_active_tab', tabId);
-  
+  localStorage.setItem('shopping_active_tab', tabId);
+
   // Update URL hash
   if (pushState) {
     history.pushState({ tab: tabId }, '', `#${tabId}`);
   }
-  
+
   // Render tab content
   renderTab(tabId);
 }
 
 function renderTab(tabId) {
-  switch(tabId) {
+  switch (tabId) {
     case 'overview':
       renderOverview();
       break;
@@ -576,8 +625,8 @@ function renderTab(tabId) {
 
 // Dark mode - auto detect from system preference
 function setupDarkMode() {
-  const savedTheme = localStorage.getItem('mercadona_theme');
-  
+  const savedTheme = localStorage.getItem('shopping_theme');
+
   if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
     document.body.classList.add('dark-mode');
   }
@@ -592,26 +641,26 @@ function setupFilters() {
 function setupYearFilter() {
   const select = document.getElementById('yearFilter');
   if (!select) return;
-  
+
   // Get available years
   const years = [...new Set(ticketsData.map(t => t.date.substring(0, 4)))].sort().reverse();
-  
+
   select.innerHTML = `
     <option value="all">Todos los años</option>
     ${years.map(y => `<option value="${y}">${y}</option>`).join('')}
   `;
-  
+
   // Restore saved filter
-  const savedYear = localStorage.getItem('mercadona_year_filter');
+  const savedYear = localStorage.getItem('shopping_year_filter');
   if (savedYear && (savedYear === 'all' || years.includes(savedYear))) {
     select.value = savedYear;
     currentYear = savedYear;
   }
-  
+
   select.addEventListener('change', () => {
     currentYear = select.value;
-    localStorage.setItem('mercadona_year_filter', currentYear);
-    const activeTab = localStorage.getItem('mercadona_active_tab') || 'overview';
+    localStorage.setItem('shopping_year_filter', currentYear);
+    const activeTab = localStorage.getItem('shopping_active_tab') || 'overview';
     renderTab(activeTab);
   });
 }
@@ -619,31 +668,34 @@ function setupYearFilter() {
 function setupStoreFilter() {
   const select = document.getElementById('storeFilter');
   if (!select) return;
-  
+
   // Get available stores
   const stores = [...new Set(ticketsData.map(t => t.store).filter(Boolean))].sort();
-  
-  if (stores.length <= 1) {
+
+  // Always show filter if there are stores, even if just one, so user can see it's working
+  if (stores.length === 0) {
     select.style.display = 'none';
     return;
   }
-  
+
+  select.style.display = 'inline-block';
+
   select.innerHTML = `
     <option value="all">Todas las tiendas</option>
     ${stores.map(s => `<option value="${s}">${s}</option>`).join('')}
   `;
-  
+
   // Restore saved filter
-  const savedStore = localStorage.getItem('mercadona_store_filter');
+  const savedStore = localStorage.getItem('shopping_store_filter');
   if (savedStore && (savedStore === 'all' || stores.includes(savedStore))) {
     select.value = savedStore;
     currentStore = savedStore;
   }
-  
+
   select.addEventListener('change', () => {
     currentStore = select.value;
-    localStorage.setItem('mercadona_store_filter', currentStore);
-    const activeTab = localStorage.getItem('mercadona_active_tab') || 'overview';
+    localStorage.setItem('shopping_store_filter', currentStore);
+    const activeTab = localStorage.getItem('shopping_active_tab') || 'overview';
     renderTab(activeTab);
   });
 }
@@ -652,17 +704,17 @@ function setupStoreFilter() {
 function setupExport() {
   const btn = document.getElementById('exportBtn');
   if (!btn) return;
-  
+
   btn.addEventListener('click', () => {
     const tickets = getFilteredTickets();
-    
+
     // Prepare CSV
     let csv = 'Fecha,Tienda,Total,Productos\n';
     tickets.forEach(t => {
       csv += `"${t.date}","${t.store || 'Mercadona'}",${t.total},"${(t.items || []).map(i => i.name).join('; ')}"\n`;
     });
-    
-    downloadFile(csv, `mercadona_tickets_${currentYear}.csv`, 'text/csv');
+
+    downloadFile(csv, `shopping_tickets_${currentYear}.csv`, 'text/csv');
   });
 }
 
@@ -673,6 +725,6 @@ document.addEventListener('DOMContentLoaded', init);
 if (window.location.hash) {
   const tabFromHash = window.location.hash.substring(1);
   if (['overview', 'categories', 'products', 'prices', 'tickets', 'insights'].includes(tabFromHash)) {
-    localStorage.setItem('mercadona_active_tab', tabFromHash);
+    localStorage.setItem('shopping_active_tab', tabFromHash);
   }
 }

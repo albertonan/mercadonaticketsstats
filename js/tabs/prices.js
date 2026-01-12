@@ -8,7 +8,7 @@ let priceSort = 'variation';
 
 function renderPriceHistory() {
   const tickets = getFilteredTickets();
-  
+
   // Collect price data
   const priceData = {};
   tickets.forEach(t => {
@@ -28,7 +28,7 @@ function renderPriceHistory() {
       priceData[item.name].history[date].push(price);
     });
   });
-  
+
   // Calculate variations
   const variations = Object.entries(priceData).map(([name, data]) => {
     const months = Object.keys(data.history).sort();
@@ -42,16 +42,19 @@ function renderPriceHistory() {
     const variation = ((lastPrice - firstPrice) / firstPrice) * 100;
     return { name, variation, firstPrice, lastPrice, data };
   });
-  
+
   // Render summary cards
   renderPriceSummary(variations);
-  
+
   // Render general price trend
   renderGeneralPriceTrend(priceData);
-  
+
   // Setup product selector
   setupProductSelector(priceData, variations);
-  
+
+  // Setup comparison selector
+  setupComparisonSelector(priceData);
+
   // Render price table
   renderPriceTable(variations);
 }
@@ -59,12 +62,12 @@ function renderPriceHistory() {
 function renderPriceSummary(variations) {
   const container = document.getElementById('priceSummaryCards');
   if (!container) return;
-  
+
   const increased = variations.filter(v => v.variation > 5).length;
   const decreased = variations.filter(v => v.variation < -5).length;
   const stable = variations.filter(v => Math.abs(v.variation) <= 5).length;
   const avgVariation = variations.length > 0 ? variations.reduce((a, b) => a + b.variation, 0) / variations.length : 0;
-  
+
   container.innerHTML = `
     <div class="stat-card">
       <div class="stat-content">
@@ -96,7 +99,7 @@ function renderPriceSummary(variations) {
 function renderGeneralPriceTrend(priceData) {
   const canvas = document.getElementById('generalPriceTrendChart');
   if (!canvas) return;
-  
+
   // Calculate average price per month across all products
   const monthlyAvg = {};
   Object.values(priceData).forEach(data => {
@@ -109,16 +112,16 @@ function renderGeneralPriceTrend(priceData) {
       monthlyAvg[month].count++;
     });
   });
-  
+
   const months = Object.keys(monthlyAvg).sort();
   const averages = months.map(m => monthlyAvg[m].total / monthlyAvg[m].count);
-  
+
   // Normalize to percentage change from first month
   const basePrice = averages[0] || 1;
   const normalized = averages.map(a => ((a - basePrice) / basePrice) * 100);
-  
+
   destroyChart('generalPriceTrendChart');
-  
+
   charts['generalPriceTrendChart'] = new Chart(canvas.getContext('2d'), {
     type: 'line',
     data: {
@@ -160,29 +163,29 @@ function setupProductSelector(priceData, variations) {
   const select = document.getElementById('productPriceSelect');
   const chartContainer = document.getElementById('individualPriceChart');
   if (!select || !chartContainer) return;
-  
+
   // Get products with price history
   const productsWithHistory = variations
     .filter(v => Object.keys(v.data.history).length >= 2)
     .sort((a, b) => Math.abs(b.variation) - Math.abs(a.variation));
-  
+
   select.innerHTML = `
     <option value="">Selecciona un producto...</option>
     ${productsWithHistory.slice(0, 100).map(v => `
       <option value="${v.name}">${truncate(v.name, 40)} (${v.variation > 0 ? '+' : ''}${v.variation.toFixed(1)}%)</option>
     `).join('')}
   `;
-  
+
   select.addEventListener('change', () => {
     const productName = select.value;
     if (!productName || !priceData[productName]) {
       chartContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Selecciona un producto para ver su evolución de precio</p>';
       return;
     }
-    
+
     renderProductPriceChart(productName, priceData[productName]);
   });
-  
+
   // Show most variable product by default
   if (productsWithHistory.length > 0) {
     select.value = productsWithHistory[0].name;
@@ -193,18 +196,18 @@ function setupProductSelector(priceData, variations) {
 function renderProductPriceChart(productName, data) {
   const container = document.getElementById('individualPriceChart');
   if (!container) return;
-  
+
   container.innerHTML = `<canvas id="productPriceCanvas"></canvas>`;
   const canvas = document.getElementById('productPriceCanvas');
-  
+
   const months = Object.keys(data.history).sort();
   const averages = months.map(m => {
     const prices = data.history[m];
     return prices.reduce((a, b) => a + b, 0) / prices.length;
   });
-  
+
   destroyChart('productPriceCanvas');
-  
+
   charts['productPriceCanvas'] = new Chart(canvas.getContext('2d'), {
     type: 'line',
     data: {
@@ -248,16 +251,117 @@ function renderProductPriceChart(productName, data) {
   });
 }
 
+function setupComparisonSelector(priceData) {
+  const select = document.getElementById('comparisonProductSelect');
+  const container = document.getElementById('priceComparisonContainer');
+  if (!select || !container) return;
+
+  // Get all products sorted by name
+  const products = Object.keys(priceData).sort();
+
+  select.innerHTML = `
+    <option value="">Selecciona un producto...</option>
+    ${products.map(name => `<option value="${name}">${name}</option>`).join('')}
+  `;
+
+  select.addEventListener('change', () => {
+    const productName = select.value;
+    if (!productName) {
+      container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Selecciona un producto para comparar precios entre tiendas</p>';
+      return;
+    }
+
+    renderPriceComparison(productName);
+  });
+}
+
+function renderPriceComparison(productName) {
+  const container = document.getElementById('priceComparisonContainer');
+  if (!container) return;
+
+  // Get all tickets containing this product
+  // Note: We need to access the global ticketsData, but filtered by year/store might not be what we want for comparison.
+  // Usually comparison is across all stores, but maybe limited by year? 
+  // Let's use all data to find latest price per store.
+
+  const productPricesByStore = {};
+
+  // Use global ticketsData (or fullData.tickets if available, but ticketsData is what's loaded)
+  // We want to find the LATEST price for this product in EACH store.
+
+  ticketsData.forEach(t => {
+    if (!t.items) return;
+    const item = t.items.find(i => i.name === productName);
+    if (item) {
+      const storeName = t.store || 'Mercadona';
+      const price = item.unitPrice || item.price;
+
+      if (!productPricesByStore[storeName] || t.date > productPricesByStore[storeName].date) {
+        productPricesByStore[storeName] = {
+          price: price,
+          date: t.date
+        };
+      }
+    }
+  });
+
+  const stores = Object.keys(productPricesByStore);
+
+  if (stores.length === 0) {
+    container.innerHTML = '<p class="text-muted">No hay datos de precios para este producto.</p>';
+    return;
+  }
+
+  // Sort by price ascending
+  const sortedStores = stores.sort((a, b) => productPricesByStore[a].price - productPricesByStore[b].price);
+  const bestPrice = productPricesByStore[sortedStores[0]].price;
+
+  container.innerHTML = `
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Tienda</th>
+            <th style="text-align: right;">Último Precio</th>
+            <th style="text-align: right;">Fecha</th>
+            <th style="text-align: center;">Diferencia</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sortedStores.map(store => {
+    const data = productPricesByStore[store];
+    const diff = data.price - bestPrice;
+    const diffPercent = (diff / bestPrice) * 100;
+    const isBest = diff === 0;
+
+    return `
+              <tr class="${isBest ? 'highlight-success' : ''}">
+                <td>${store}</td>
+                <td style="text-align: right; font-weight: bold;">${formatCurrency(data.price)}</td>
+                <td style="text-align: right;">${formatDate(data.date)}</td>
+                <td style="text-align: center;">
+                  ${isBest ? '<span class="badge badge-success">Mejor Precio</span>' :
+        `<span class="text-danger">+${formatCurrency(diff)} (+${diffPercent.toFixed(1)}%)</span>`}
+                </td>
+              </tr>
+            `;
+  }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function renderPriceTable(variations) {
   const container = document.getElementById('priceChangeTable');
   const sortSelect = document.getElementById('priceSort');
   if (!container) return;
-  
+
   const renderTable = () => {
     const sortBy = sortSelect?.value || 'variation';
     let sorted;
-    
-    switch(sortBy) {
+
+    switch (sortBy) {
       case 'increase':
         sorted = [...variations].sort((a, b) => b.variation - a.variation);
         break;
@@ -267,9 +371,9 @@ function renderPriceTable(variations) {
       default:
         sorted = [...variations].sort((a, b) => Math.abs(b.variation) - Math.abs(a.variation));
     }
-    
+
     const withChanges = sorted.filter(v => Math.abs(v.variation) > 0.5);
-    
+
     container.innerHTML = `
       <div class="table-container" style="max-height: 500px; overflow-y: auto;">
         <table>
@@ -298,7 +402,7 @@ function renderPriceTable(variations) {
       ${withChanges.length > 100 ? `<p style="text-align: center; color: var(--text-muted); margin-top: 16px;">Mostrando 100 de ${withChanges.length} productos con cambios</p>` : ''}
     `;
   };
-  
+
   if (sortSelect) {
     sortSelect.addEventListener('change', renderTable);
   }

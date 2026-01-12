@@ -29,18 +29,18 @@ const PRIORITY_RULES = [
   { pattern: /ULTRA WHITE/i, category: 'higiene_limpieza' }, // Dentífrico blanqueador
   { pattern: /SUAVIZANTE/i, category: 'higiene_limpieza' }, // Suavizante ropa
   { pattern: /TURRON|TURRÓN/i, category: 'dulces_snacks' }, // Turrón siempre es dulce
-  
+
   // Lácteos - productos proteínicos Hacendado primero
   { pattern: /\+\s*PROT|\+ PROTEÍNA|\+PROTEINAS|\+PROT/i, category: 'lacteos' }, // Yogures +proteína
   { pattern: /PROTEÍNAS FLAN|PROTEÍNAS NATURAL|PROTEÍNAS STRACCI|PROTEINA 0%/i, category: 'lacteos' },
   { pattern: /0% CON FRUTAS|0%0%/i, category: 'lacteos' }, // Yogures 0%
   { pattern: /Q\.?\s*LONCHAS|Q\s*SEMI|QUESO/i, category: 'lacteos' }, // Quesos
-  
+
   // Proteínas
   { pattern: /CRUNCHY CHICKEN|MEDALLÓN|MEDALLON|MUSLO|CONTRA DES|CUARTO CERT|SALAMI|TACOS DE POTA/i, category: 'proteinas' },
   { pattern: /F\.\s*PLANCHA|FILETE/i, category: 'proteinas' }, // Filetes
   { pattern: /B\.GELATINA CARNE/i, category: 'proteinas' }, // Gelatina para perros con carne
-  
+
   // Congelados - pizzas y productos congelados tienen prioridad sobre sus ingredientes
   { pattern: /\bPIZZA\b/i, category: 'congelados' }, // Solo pizza como palabra completa
   { pattern: /LASAÑA|LASANA/i, category: 'congelados' },
@@ -54,7 +54,7 @@ const PRIORITY_RULES = [
   { pattern: /SAN JACOBO/i, category: 'congelados' },
   { pattern: /TEQUEÑOS/i, category: 'congelados' },
   { pattern: /SALTEADO DE VE/i, category: 'congelados' }, // Salteado de verduras congelado
-  
+
   // Despensa - productos procesados tienen prioridad sobre ingredientes frescos
   { pattern: /TOMATE FRITO|TOM\.FRITO|TOMATE TRITURADO/i, category: 'despensa' },
   { pattern: /CALDO POLLO|CALDO CARNE|CALDO VERDURAS|CALDO COCIDO/i, category: 'despensa' },
@@ -66,7 +66,7 @@ const PRIORITY_RULES = [
   { pattern: /A\. NEGRAS|ACEIT\./i, category: 'despensa' },
   { pattern: /4 ESTACIONES/i, category: 'despensa' }, // Especias 4 estaciones
   { pattern: /ESP VERDE|ESPÁRRAGO/i, category: 'despensa' }, // Espárragos en conserva
-  
+
   // Bebidas - cerveza y refrescos
   { pattern: /DOBLE MALTA|SIN FILTRAR|CERV\.|\.ÁGUILA|RADLER/i, category: 'bebidas' },
   { pattern: /CC ZERO|COCA.COLA|PEPSI|FANTA/i, category: 'bebidas' },
@@ -77,7 +77,7 @@ const PRIORITY_RULES = [
   { pattern: /ESTRELLA/i, category: 'bebidas' }, // Cerveza Estrella
   { pattern: /VARITAS CHAI/i, category: 'bebidas' }, // Te chai
   { pattern: /C\. TOSTADO/i, category: 'bebidas' }, // Café tostado
-  
+
   // Dulces y snacks - chocolate y dulces tienen prioridad
   { pattern: /CHOCOLATE|CHOCO/i, category: 'dulces_snacks' },
   { pattern: /PANETTONE|PANDORO/i, category: 'dulces_snacks' },
@@ -89,7 +89,7 @@ const PRIORITY_RULES = [
   { pattern: /BERLINA/i, category: 'dulces_snacks' },
   { pattern: /BARR PROT|BARRITA PROT/i, category: 'dulces_snacks' }, // Barritas proteína = snacks
   { pattern: /CARAMEL EUCALIPTO/i, category: 'dulces_snacks' }, // Caramelos sin azúcar
-  
+
   // Frutas y verduras
   { pattern: /CHERRY|T\.CHERRY/i, category: 'frutas_verduras' },
   { pattern: /CEBOLLINO/i, category: 'frutas_verduras' },
@@ -98,7 +98,7 @@ const PRIORITY_RULES = [
   { pattern: /RABANITOS/i, category: 'frutas_verduras' },
   { pattern: /PE AGRIDULCE|REGA RED|ROJA ACIDULCE|ROJA DULCE/i, category: 'frutas_verduras' }, // Pimientos
   { pattern: /R\. SERRANA/i, category: 'frutas_verduras' }, // Ensalada serrana
-  
+
   // Higiene y limpieza
   { pattern: /B\. BASURA|B\.ENVASES|BOLSAS DOGGYBAG/i, category: 'higiene_limpieza' },
   { pattern: /BOLSAS ZIP/i, category: 'higiene_limpieza' },
@@ -109,13 +109,13 @@ const PRIORITY_RULES = [
   { pattern: /PILA ALCALINA|COMPRIMIDOS VIT|MAGNESIO EFERV/i, category: 'higiene_limpieza' }, // Pilas y suplementos
   { pattern: /PLATO POINSETTIA|VASO NAVIDAD|RECIPIENTES|COPA CAVA/i, category: 'otros' }, // Menaje/decoración
   { pattern: /BOLSA PLASTICO|BOLSA RAFIA/i, category: 'otros' }, // Bolsas reutilizables
-  
+
   // Proteínas - carnes y pescados específicos
   { pattern: /CLARA LIQUIDA/i, category: 'proteinas' },
   { pattern: /BURGER BERENJENA|BURGER CALABAZA|BURGER ESPINACAS/i, category: 'frutas_verduras' }, // Burgers vegetales
   { pattern: /TABLA PATE|PATE DE/i, category: 'proteinas' },
   { pattern: /B\.MIXTA|CONCHA FINA/i, category: 'proteinas' }, // Embutidos
-  
+
   // Bebidas - zumos y bebidas con frutas
   { pattern: /BEBIDA ARANDANOS|BEBIDA DE/i, category: 'bebidas' },
   { pattern: /B\. ESPELT/i, category: 'bebidas' },
@@ -129,113 +129,113 @@ const CATEGORIES_CONFIG = {
     name: "Proteínas",
     icon: "",
     color: "#e74c3c",
-    keywords: ["PECHUGA", "POLLO", "PAVO", "CERDO", "TERNERA", "BURGER", "JAMÓN", "JAMON", 
-              "CECINA", "SALMON", "SALMÓN", "HUEVO", "HUEVOS", "CHULETA", "CONTRAMUSLO",
-              "LOMO", "FILETE", "ATÚN", "ATUN", "MERLUZA", "TRUCHA", "DORADA", "LUBINA",
-              "MORTADELA", "LONGANIZA", "SALCHICHA", "FRANKFURT", "ALBÓNDIGA", "ALBONDIGA",
-              "LANGOSTINO", "GAMBA", "CALAMAR", "MEJILLON",
-              "SARDINA", "CHIPIRON", "MEDALLON", "RODAJA", "SERRANO", "CORTADO A CUCHILLO",
-              "KEBAB", "TIRAS POLLO", "MUSLITO", "CODILLO", "CARRILLERA", "RELLENITO",
-              "BROCHETA", "JAMONCITO", "FIAMBRE", "RESERVA TAPAS", "FUET", "COMPANGO",
-              "BOQUERONES", "ANCHOAS", "BACALAO", "SEPIA", "PULPO", "RAPE"]
+    keywords: ["PECHUGA", "POLLO", "PAVO", "CERDO", "TERNERA", "BURGER", "JAMÓN", "JAMON",
+      "CECINA", "SALMON", "SALMÓN", "HUEVO", "HUEVOS", "CHULETA", "CONTRAMUSLO",
+      "LOMO", "FILETE", "ATÚN", "ATUN", "MERLUZA", "TRUCHA", "DORADA", "LUBINA",
+      "MORTADELA", "LONGANIZA", "SALCHICHA", "FRANKFURT", "ALBÓNDIGA", "ALBONDIGA",
+      "LANGOSTINO", "GAMBA", "CALAMAR", "MEJILLON",
+      "SARDINA", "CHIPIRON", "MEDALLON", "RODAJA", "SERRANO", "CORTADO A CUCHILLO",
+      "KEBAB", "TIRAS POLLO", "MUSLITO", "CODILLO", "CARRILLERA", "RELLENITO",
+      "BROCHETA", "JAMONCITO", "FIAMBRE", "RESERVA TAPAS", "FUET", "COMPANGO",
+      "BOQUERONES", "ANCHOAS", "BACALAO", "SEPIA", "PULPO", "RAPE"]
   },
   lacteos: {
     name: "Lácteos",
     icon: "",
     color: "#f39c12",
     keywords: ["LECHE", "QUESO", "YOGUR", "KÉFIR", "KEFIR", "COTTAGE", "MOZZARELLA",
-              "MANTEQUILLA", "NATA", "BURRATA", "FETA", "GRIEGO", "BÍFIDUS", "BIFIDUS",
-              "ALPRO", "SOJA", "CUAJADA", "REQUESÓN", "REQUESON", "SKYR"]
+      "MANTEQUILLA", "NATA", "BURRATA", "FETA", "GRIEGO", "BÍFIDUS", "BIFIDUS",
+      "ALPRO", "SOJA", "CUAJADA", "REQUESÓN", "REQUESON", "SKYR"]
   },
   frutas_verduras: {
     name: "Frutas y Verduras",
     icon: "",
     color: "#27ae60",
     keywords: ["TOMATE", "CEBOLLA", "ZANAHORIA", "PLATANO", "PLÁTANO", "BANANA", "MANGO",
-              "KIWI", "MANZANA", "PERA", "NARANJA", "MANDARINA", "LIMON", "LIMÓN",
-              "AGUACATE", "PEPINO", "CALABACIN", "CALABACÍN", "ESPINACA", "RUCULA",
-              "LECHUGA", "BROTES", "ENSALADA", "APIO", "PIMIENTO", "PUERRO",
-              "COLIFLOR", "BROCOLI", "BRÓCOLI", "PATATA", "BATATA", "SETA", "CHAMPIÑON",
-              "AJO", "FRESÓN", "FRESON", "FRAMBUESA", "ARÁNDANO", "ARANDANO", "CEREZA",
-              "CIRUELA", "MELON", "MELÓN", "SANDÍA", "SANDIA", "PIÑA", "BREVAS",
-              "UVA", "LIMA", "GUACAMOLE", "GAZPACHO", "SALMOREJO", "CALABAZA",
-              "ESPARRAGO", "ESPÁRRAGO", "GUISANTES", "JUDÍA", "JUDIA", "ICEBERG",
-              "CANÓNIGOS", "ALBAHACA", "PEREJIL", "DÁTIL", "DATIL", "REMOLACHA",
-              "BERENJENA", "CASTAÑAS", "ARREGLO PUCHERO", "PUERRO", "COL ", "REPOLLO",
-              "NECTARINA", "MELOCOTÓN", "MELOCOTON", "PARAGUAYO", "GRANADA", "PAPAYA"]
+      "KIWI", "MANZANA", "PERA", "NARANJA", "MANDARINA", "LIMON", "LIMÓN",
+      "AGUACATE", "PEPINO", "CALABACIN", "CALABACÍN", "ESPINACA", "RUCULA",
+      "LECHUGA", "BROTES", "ENSALADA", "APIO", "PIMIENTO", "PUERRO",
+      "COLIFLOR", "BROCOLI", "BRÓCOLI", "PATATA", "BATATA", "SETA", "CHAMPIÑON",
+      "AJO", "FRESÓN", "FRESON", "FRAMBUESA", "ARÁNDANO", "ARANDANO", "CEREZA",
+      "CIRUELA", "MELON", "MELÓN", "SANDÍA", "SANDIA", "PIÑA", "BREVAS",
+      "UVA", "LIMA", "GUACAMOLE", "GAZPACHO", "SALMOREJO", "CALABAZA",
+      "ESPARRAGO", "ESPÁRRAGO", "GUISANTES", "JUDÍA", "JUDIA", "ICEBERG",
+      "CANÓNIGOS", "ALBAHACA", "PEREJIL", "DÁTIL", "DATIL", "REMOLACHA",
+      "BERENJENA", "CASTAÑAS", "ARREGLO PUCHERO", "PUERRO", "COL ", "REPOLLO",
+      "NECTARINA", "MELOCOTÓN", "MELOCOTON", "PARAGUAYO", "GRANADA", "PAPAYA"]
   },
   bebidas: {
     name: "Bebidas",
     icon: "",
     color: "#3498db",
     keywords: ["COLA", "AGUA", "CERVEZA", "ZUMO", "CAFÉ", "CAFE", "TÓNICA", "TONICA",
-              "SPRITE", "LIMONADA", "ISOTONIC", "ENERG", "RADLER", "VINO", "GINEBRA",
-              "VERMOUTH", "BEBIDA", "NECTAR", "ANTIOX", "SHOT", "CAVA", "CHAMPAGNE",
-              "SIDRA", "WHISKY", "RON ", "VODKA", "LICOR", "SANGRÍA", "SANGRIA",
-              "TÉ ", "TE ", "INFUSION", "MANZANILLA", "POLEO"]
+      "SPRITE", "LIMONADA", "ISOTONIC", "ENERG", "RADLER", "VINO", "GINEBRA",
+      "VERMOUTH", "BEBIDA", "NECTAR", "ANTIOX", "SHOT", "CAVA", "CHAMPAGNE",
+      "SIDRA", "WHISKY", "RON ", "VODKA", "LICOR", "SANGRÍA", "SANGRIA",
+      "TÉ ", "TE ", "INFUSION", "MANZANILLA", "POLEO"]
   },
   congelados: {
     name: "Congelados",
     icon: "",
     color: "#9b59b6",
     keywords: ["PIZZA", "NUGGETS", "LASAÑA", "LASANA", "EMPANADA", "CANELONES", "CANELON",
-              "CANELÓN", "WAFFLE", "PATATAS GAJO", "PATATAS HORNO", "TEQUEÑOS", "TEMPURA",
-              "FIGURITAS", "CROQUETAS", "ARROZ TRES", "BENTO", "POKE", "CONGELAD",
-              "HIELO", "WONTON", "EMPANADO", "ÑOQUIS", "SAN JACOBO", "GYOZAS"]
+      "CANELÓN", "WAFFLE", "PATATAS GAJO", "PATATAS HORNO", "TEQUEÑOS", "TEMPURA",
+      "FIGURITAS", "CROQUETAS", "ARROZ TRES", "BENTO", "POKE", "CONGELAD",
+      "HIELO", "WONTON", "EMPANADO", "ÑOQUIS", "SAN JACOBO", "GYOZAS"]
   },
   despensa: {
     name: "Despensa",
     icon: "",
     color: "#1abc9c",
     keywords: ["ARROZ", "PASTA", "MACARRON", "SPAGHETTI", "PENNE", "HELICES", "PAJARITAS",
-              "FIDEOS", "FIDEO", "ACEITE", "TOMATE FRITO", "TOMATE TRITURADO", "SAL ",
-              "HARINA", "AZUCAR", "AZÚCAR", "LEGUMBRE", "GARBANZO", "LENTEJA", "FABADA",
-              "COCIDO", "CALDO", "SOPA", "CREMA DE", "TORTILLA", "PAN ", "PANECILLO",
-              "BARRA", "NAPOLITANA", "NACHOS", "CRACKERS", "MOSTAZA",
-              "MAYONESA", "ALLIOLI", "SALSA", "HUMMUS", "TSATSIKI", "ACEITUNA",
-              "MEJILLONES ESCAB", "MEJILLÓN ESCAB", "MEJIL.", "SARDINAS", "CABALLA", 
-              "ALMEJONES", "WAKAME", "MIEL", "LEVADURA", "ESPECIAS", "CANELA", 
-              "PIMIENTA", "LAUREL", "INTEGRAL", "AVENA", "QUINOA", "COUS", "SEMOLA", 
-              "TAPIOCA", "VINAGRE", "PIMENTON", "OREGANO", "TOMILLO", "ROMERO", "CURRY",
-              "BICARBONATO", "MAIZENA", "PAN RALLADO", "RELLENO", "IMPULSOR", "ROYAL",
-              "PREPARADO", "FIDEUA", "FUMET", "HIERBAS", "CLAVO", "LINO", "CHÍA",
-              "MAIZ DULCE", "MACEDONIA", "PAISANA", "PAELLA", "CREPES", "PULGUITAS",
-              "ENCURTIDOS", "AROMA", "BANDERILLA", "GILDA", "HUMUS"]
+      "FIDEOS", "FIDEO", "ACEITE", "TOMATE FRITO", "TOMATE TRITURADO", "SAL ",
+      "HARINA", "AZUCAR", "AZÚCAR", "LEGUMBRE", "GARBANZO", "LENTEJA", "FABADA",
+      "COCIDO", "CALDO", "SOPA", "CREMA DE", "TORTILLA", "PAN ", "PANECILLO",
+      "BARRA", "NAPOLITANA", "NACHOS", "CRACKERS", "MOSTAZA",
+      "MAYONESA", "ALLIOLI", "SALSA", "HUMMUS", "TSATSIKI", "ACEITUNA",
+      "MEJILLONES ESCAB", "MEJILLÓN ESCAB", "MEJIL.", "SARDINAS", "CABALLA",
+      "ALMEJONES", "WAKAME", "MIEL", "LEVADURA", "ESPECIAS", "CANELA",
+      "PIMIENTA", "LAUREL", "INTEGRAL", "AVENA", "QUINOA", "COUS", "SEMOLA",
+      "TAPIOCA", "VINAGRE", "PIMENTON", "OREGANO", "TOMILLO", "ROMERO", "CURRY",
+      "BICARBONATO", "MAIZENA", "PAN RALLADO", "RELLENO", "IMPULSOR", "ROYAL",
+      "PREPARADO", "FIDEUA", "FUMET", "HIERBAS", "CLAVO", "LINO", "CHÍA",
+      "MAIZ DULCE", "MACEDONIA", "PAISANA", "PAELLA", "CREPES", "PULGUITAS",
+      "ENCURTIDOS", "AROMA", "BANDERILLA", "GILDA", "HUMUS"]
   },
   dulces_snacks: {
     name: "Dulces y Snacks",
     icon: "",
     color: "#e67e22",
     keywords: ["CHOCOLATE", "CHOCO", "GALLETA", "GALL", "BOMBON",
-              "TURRON", "TURRÓN", "POLVORON", "POLVORÓN", "GOLOSINA", "GOMINOLA",
-              "CARAMELO", "CHICLE", "CACAHUETE", "SNACK", "CHEETOS", "DORITOS",
-              "COCKTAIL", "FRUTOS SECOS", "FRUTOS ROJOS", "NUEZ", "HELADO", "CONO", 
-              "GRANIZADO", "PANETTONE", "PANDORO", "MAZAPAN", "MAZAPÁN", "ROSCÓN", 
-              "ROSCON", "BARRITA", "STICKS", "COOKIES", "DIGESTIVE", "MINIS LECHE", 
-              "KIT-KAT", "SUPERSANDWICH", "MINISANDWICH", "COULANT", "MOUSSE", "XUXES",
-              "ROCHER", "LINDOR", "FERRERO", "KINDER", "OREO", "CHIPS AHOY",
-              "PALMERA", "CROISSANT", "BERLINA", "ENSAIMADA", "DONUT", "MAGDALENA",
-              "PELADILLA", "PERLAS", "DOCHI", "CHEESECAKE", "MINI BOMB", "FUSSION",
-              "DELIZZE", "NEGRO 72%", "NEGRO 99%", "DIGEST", "MINI SALADAS"]
+      "TURRON", "TURRÓN", "POLVORON", "POLVORÓN", "GOLOSINA", "GOMINOLA",
+      "CARAMELO", "CHICLE", "CACAHUETE", "SNACK", "CHEETOS", "DORITOS",
+      "COCKTAIL", "FRUTOS SECOS", "FRUTOS ROJOS", "NUEZ", "HELADO", "CONO",
+      "GRANIZADO", "PANETTONE", "PANDORO", "MAZAPAN", "MAZAPÁN", "ROSCÓN",
+      "ROSCON", "BARRITA", "STICKS", "COOKIES", "DIGESTIVE", "MINIS LECHE",
+      "KIT-KAT", "SUPERSANDWICH", "MINISANDWICH", "COULANT", "MOUSSE", "XUXES",
+      "ROCHER", "LINDOR", "FERRERO", "KINDER", "OREO", "CHIPS AHOY",
+      "PALMERA", "CROISSANT", "BERLINA", "ENSAIMADA", "DONUT", "MAGDALENA",
+      "PELADILLA", "PERLAS", "DOCHI", "CHEESECAKE", "MINI BOMB", "FUSSION",
+      "DELIZZE", "NEGRO 72%", "NEGRO 99%", "DIGEST", "MINI SALADAS"]
   },
   higiene_limpieza: {
     name: "Higiene y Limpieza",
     icon: "",
     color: "#95a5a6",
-    keywords: ["PAPEL", "JABÓN", "JABON", "DETERGENTE", "DET ", "GEL BAÑO", "CHAMPÚ", 
-              "CHAMPU", "DEO", "DESODORANTE", "CEPILLO", "PASTA DENT", "COLG", 
-              "ENJUAGUE", "SUAVIZANTE", "LAVAVAJILLAS", "LIMPIA", "ESTROPAJO", 
-              "FREGONA", "FRIEGA", "BOLSA BASURA", "B. BASURA", "B.ENVASES", "ROLLO", 
-              "SERVILLETA", "TOALLITA", "PAÑUELO", "PANUELO", "BASTONCILLO", "DISCO", 
-              "ESPONJA", "FILM", "ALUMINIO", "SPRAY", "AMBIENTADOR", "AMB.", "VELA", 
-              "PERFUME", "EDP", "COLONIA", "CREMA", "MASCARILLA", "MAQUILLAJE", 
-              "MASCARA", "LABIAL", "MAQUINILLA", "COMP.", "PAÑAL", "GASAS", 
-              "T.HIDROALC", "LÁGRIMAS", "PROTECTOR", "BOLSAS ZIP", "WC ",
-              "ABSORBEOLOR", "COTTONLIKE", "T.INTIMAS", "COMPRESAS", "TAMPONES",
-              "MULTIUSOS", "PASTILLA LEJIA", "CÁPSULA ROPA", "ESPUMA RIZOS", 
-              "HIALURONICO", "INSTANT COND", "REFILL", "PLUMERO", "POSAVAJILLAS",
-              "SUERO FISIO", "ESTERIL", "GEL HIAL", "P. COLORCOR", "STICK DENTAL",
-              "T.MULTI", "MULTI.LIM"]
+    keywords: ["PAPEL", "JABÓN", "JABON", "DETERGENTE", "DET ", "GEL BAÑO", "CHAMPÚ",
+      "CHAMPU", "DEO", "DESODORANTE", "CEPILLO", "PASTA DENT", "COLG",
+      "ENJUAGUE", "SUAVIZANTE", "LAVAVAJILLAS", "LIMPIA", "ESTROPAJO",
+      "FREGONA", "FRIEGA", "BOLSA BASURA", "B. BASURA", "B.ENVASES", "ROLLO",
+      "SERVILLETA", "TOALLITA", "PAÑUELO", "PANUELO", "BASTONCILLO", "DISCO",
+      "ESPONJA", "FILM", "ALUMINIO", "SPRAY", "AMBIENTADOR", "AMB.", "VELA",
+      "PERFUME", "EDP", "COLONIA", "CREMA", "MASCARILLA", "MAQUILLAJE",
+      "MASCARA", "LABIAL", "MAQUINILLA", "COMP.", "PAÑAL", "GASAS",
+      "T.HIDROALC", "LÁGRIMAS", "PROTECTOR", "BOLSAS ZIP", "WC ",
+      "ABSORBEOLOR", "COTTONLIKE", "T.INTIMAS", "COMPRESAS", "TAMPONES",
+      "MULTIUSOS", "PASTILLA LEJIA", "CÁPSULA ROPA", "ESPUMA RIZOS",
+      "HIALURONICO", "INSTANT COND", "REFILL", "PLUMERO", "POSAVAJILLAS",
+      "SUERO FISIO", "ESTERIL", "GEL HIAL", "P. COLORCOR", "STICK DENTAL",
+      "T.MULTI", "MULTI.LIM"]
   },
   otros: {
     name: "Otros",
@@ -251,25 +251,25 @@ const CATEGORIES_CONFIG = {
  */
 function categorizeProduct(name) {
   const nameUpper = name.toUpperCase();
-  
+
   // PASO 1: Evaluar reglas de prioridad primero (patrones específicos)
   for (const rule of PRIORITY_RULES) {
     if (rule.pattern.test(nameUpper)) {
       return rule.category;
     }
   }
-  
+
   // PASO 2: Buscar coincidencia por keywords en orden de categorías
   for (const [catKey, catInfo] of Object.entries(CATEGORIES_CONFIG)) {
     if (catKey === 'otros') continue;
-    
+
     for (const keyword of catInfo.keywords) {
       if (nameUpper.includes(keyword.toUpperCase())) {
         return catKey;
       }
     }
   }
-  
+
   return 'otros';
 }
 
@@ -278,7 +278,7 @@ function categorizeProduct(name) {
  */
 function parseStoreInfo(headerLines) {
   const store = { name: "Mercadona", city: "" };
-  
+
   for (const line of headerLines) {
     const lineUpper = line.toUpperCase();
     if (lineUpper.includes("GALAPAGAR")) {
@@ -299,7 +299,7 @@ function parseStoreInfo(headerLines) {
       break;
     }
   }
-  
+
   return store;
 }
 
@@ -309,59 +309,59 @@ function parseStoreInfo(headerLines) {
 function parseTicketsFromText(text) {
   const tickets = [];
   const seenIds = new Set();
-  
+
   // Split by ticket separator (10+ equal signs)
   const ticketBlocks = text.split(/={10,}/);
-  
+
   for (const block of ticketBlocks) {
     const trimmedBlock = block.trim();
     if (!trimmedBlock) continue;
-    
+
     // Skip PDF filename headers (may start with emoji or text)
     if (trimmedBlock.startsWith('PDF:') || /^[\p{Emoji}]/u.test(trimmedBlock.charAt(0))) continue;
-    
+
     const lines = trimmedBlock.split('\n');
-    
+
     // Find date/time and invoice number
     const dateMatch = trimmedBlock.match(/(\d{2}\/\d{2}\/\d{4})\s+(\d{2}:\d{2})/);
     const invoiceMatch = trimmedBlock.match(/FACTURA SIMPLIFICADA:\s*(\S+)/);
     const totalMatch = trimmedBlock.match(/TOTAL \(€\)\s*([\d,]+)/);
-    
+
     if (dateMatch && invoiceMatch && totalMatch) {
       // Parse date
       const dateStr = dateMatch[1];
       const timeStr = dateMatch[2];
       const [day, month, year] = dateStr.split('/');
       const formattedDate = formatLocalDate(year, month, day);
-      
+
       const invoiceId = invoiceMatch[1];
-      
+
       // Skip duplicates
       if (seenIds.has(invoiceId)) continue;
       seenIds.add(invoiceId);
-      
+
       const totalStr = totalMatch[1].replace(',', '.');
       const total = parseFloat(totalStr);
-      
+
       // Get store info
       const store = parseStoreInfo(lines.slice(0, 10));
-      
+
       // Parse items
       const items = [];
       let inItems = false;
-      
+
       for (const line of lines) {
         const trimmedLine = line.trim();
-        
+
         if (trimmedLine.includes('Descripción') && trimmedLine.includes('Importe')) {
           inItems = true;
           continue;
         }
-        
+
         if (inItems) {
           // Stop at TOTAL line
           if (trimmedLine.startsWith('TOTAL (€)')) break;
-          
+
           // Check for weighted item continuation
           const weightMatch = trimmedLine.match(/([\d,]+)\s*kg\s*([\d,]+)\s*€\/kg\s*([\d,]+)/);
           if (weightMatch && items.length > 0) {
@@ -371,13 +371,13 @@ function parseTicketsFromText(text) {
             items[items.length - 1].weight = weight;
             continue;
           }
-          
+
           // Regular item line: "1 PRODUCT NAME 1,25" or "2 PRODUCT NAME 1,25 2,50"
           const itemMatch = trimmedLine.match(/^(\d+)\s+(.+?)\s+([\d,]+)(?:\s+([\d,]+))?$/);
           if (itemMatch) {
             const qty = parseInt(itemMatch[1]);
             let name = itemMatch[2].trim();
-            
+
             let unitPrice, totalPrice;
             if (itemMatch[4]) {
               unitPrice = parseFloat(itemMatch[3].replace(',', '.'));
@@ -386,10 +386,10 @@ function parseTicketsFromText(text) {
               totalPrice = parseFloat(itemMatch[3].replace(',', '.'));
               unitPrice = qty > 0 ? totalPrice / qty : totalPrice;
             }
-            
+
             // Clean up name
             name = name.replace(/\s+/g, ' ').trim();
-            
+
             // Skip non-product lines
             const skipWords = ['TARJETA', 'IVA', 'BASE', 'CUOTA', 'ENTREGA', 'PARKING'];
             if (name && !skipWords.some(skip => name.toUpperCase().includes(skip))) {
@@ -404,7 +404,7 @@ function parseTicketsFromText(text) {
           }
         }
       }
-      
+
       const ticket = {
         id: invoiceId,
         date: formattedDate,
@@ -413,14 +413,14 @@ function parseTicketsFromText(text) {
         store: store.name,
         items: items
       };
-      
+
       tickets.push(ticket);
     }
   }
-  
+
   // Sort by date
   tickets.sort((a, b) => a.date.localeCompare(b.date));
-  
+
   return tickets;
 }
 
@@ -430,18 +430,18 @@ function parseTicketsFromText(text) {
 async function extractTextFromPDF(pdfData) {
   const loadingTask = pdfjsLib.getDocument({ data: pdfData });
   const pdf = await loadingTask.promise;
-  
+
   let fullText = '';
-  
+
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
-    
+
     // Try to preserve line structure
     const items = textContent.items;
     let lastY = null;
     let lineText = '';
-    
+
     for (const item of items) {
       // Check if we're on a new line (Y position changed significantly)
       if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
@@ -451,14 +451,14 @@ async function extractTextFromPDF(pdfData) {
       lineText += item.str + ' ';
       lastY = item.transform[5];
     }
-    
+
     if (lineText.trim()) {
       fullText += lineText.trim() + '\n';
     }
-    
+
     fullText += '\n';
   }
-  
+
   return fullText;
 }
 
@@ -470,54 +470,54 @@ function parseSinglePDFText(text, filename) {
   const dateMatch = text.match(/(\d{2}\/\d{2}\/\d{4})\s+(\d{2}:\d{2})/);
   const invoiceMatch = text.match(/FACTURA\s*SIMPLIFICADA[:\s]*(\d+-\d+-\d+)/i);
   const totalMatch = text.match(/TOTAL\s*\(?€?\)?\s*([\d,\.]+)/i);
-  
+
   if (!dateMatch || !totalMatch) {
     console.log(`Could not parse ${filename}: missing date or total`);
     return null;
   }
-  
+
   // Parse date
   const dateStr = dateMatch[1];
   const timeStr = dateMatch[2];
   const [day, month, year] = dateStr.split('/');
   const formattedDate = formatLocalDate(year, month, day);
-  
+
   // Invoice ID
   let invoiceId = invoiceMatch ? invoiceMatch[1] : `PDF-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  
+
   // Total
   const totalStr = totalMatch[1].replace(',', '.');
   const total = parseFloat(totalStr);
-  
+
   // Store info
   const store = parseStoreInfo(text.split('\n').slice(0, 15));
-  
+
   // Parse items - look for the pattern in Mercadona tickets
   const items = [];
   const lines = text.split('\n');
-  
+
   let inItems = false;
-  
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
+
     // Start after "Descripción" header
     if (line.includes('Descripción') || line.includes('Descripcion')) {
       inItems = true;
       continue;
     }
-    
+
     // Stop at TOTAL
     if (inItems && /^TOTAL\s*\(?€?\)?/i.test(line)) {
       break;
     }
-    
+
     if (inItems) {
       // Skip empty lines and payment/IVA lines
       if (!line || /^(TARJETA|IVA|BASE|CUOTA|ENTREGA|PARKING|N\.C:|AID:|ARC:|Verificado|Importe:|SE ADMITEN)/i.test(line)) {
         continue;
       }
-      
+
       // Check for weighted item line (X,XXX kg X,XX €/kg X,XX)
       const weightMatch = line.match(/([\d,]+)\s*kg\s*([\d,]+)\s*€\/kg\s*([\d,]+)/);
       if (weightMatch && items.length > 0) {
@@ -527,11 +527,11 @@ function parseSinglePDFText(text, filename) {
         items[items.length - 1].weight = weight;
         continue;
       }
-      
+
       // Try different patterns for item lines
       // Pattern 1: "1 PRODUCT NAME 1,25" or "2 PRODUCT NAME 1,25 2,50"
       let itemMatch = line.match(/^(\d+)\s+(.+?)\s+([\d,]+)(?:\s+([\d,]+))?$/);
-      
+
       // Pattern 2: PDF.js might merge numbers differently "1 PRODUCT NAME1,25"
       if (!itemMatch) {
         itemMatch = line.match(/^(\d+)\s+(.+?)([\d,]+)$/);
@@ -543,14 +543,14 @@ function parseSinglePDFText(text, filename) {
           }
         }
       }
-      
+
       if (itemMatch) {
         const qty = parseInt(itemMatch[1]);
         let name = itemMatch[2].trim();
-        
+
         // Clean common OCR artifacts
         name = name.replace(/^[`'"]|[`'"]$/g, '').trim();
-        
+
         let unitPrice, totalPrice;
         if (itemMatch[4]) {
           unitPrice = parseFloat(itemMatch[3].replace(',', '.'));
@@ -559,10 +559,10 @@ function parseSinglePDFText(text, filename) {
           totalPrice = parseFloat(itemMatch[3].replace(',', '.'));
           unitPrice = qty > 0 ? totalPrice / qty : totalPrice;
         }
-        
+
         // Validate price
         if (isNaN(totalPrice) || totalPrice <= 0) continue;
-        
+
         // Skip non-product lines
         const skipWords = ['TARJETA', 'IVA', 'BASE', 'CUOTA', 'ENTREGA', 'PARKING', 'TOTAL'];
         if (name && name.length > 1 && !skipWords.some(skip => name.toUpperCase().includes(skip))) {
@@ -577,12 +577,12 @@ function parseSinglePDFText(text, filename) {
       }
     }
   }
-  
+
   if (items.length === 0) {
     console.log(`No items found in ${filename}`);
     return null;
   }
-  
+
   return {
     id: invoiceId,
     date: formattedDate,
@@ -635,17 +635,17 @@ function clearRawTexts() {
 function reparseFromRawTexts() {
   const rawTexts = getRawTexts();
   const entries = Object.entries(rawTexts);
-  
+
   if (entries.length === 0) {
     console.log('No raw texts available for re-parsing');
     return null;
   }
-  
+
   console.log(`Re-parsing ${entries.length} tickets from raw texts...`);
-  
+
   const tickets = [];
   const seenIds = new Set();
-  
+
   for (const [id, text] of entries) {
     try {
       const ticket = parseSinglePDFText(text, id);
@@ -657,10 +657,10 @@ function reparseFromRawTexts() {
       console.error(`Error re-parsing ${id}:`, error);
     }
   }
-  
+
   // Sort by date
   tickets.sort((a, b) => a.date.localeCompare(b.date));
-  
+
   console.log(`Re-parsed ${tickets.length} tickets successfully`);
   return tickets;
 }
@@ -673,22 +673,22 @@ async function processPDFs(files, progressCallback) {
   const seenIds = new Set();
   const rawTexts = {}; // Store raw texts for later re-parsing
   let processed = 0;
-  
+
   for (const file of files) {
     try {
       const arrayBuffer = await file.arrayBuffer();
       const text = await extractTextFromPDF(new Uint8Array(arrayBuffer));
-      
+
       // Try to parse as single PDF first
       const ticket = parseSinglePDFText(text, file.name);
-      
+
       if (ticket && !seenIds.has(ticket.id)) {
         seenIds.add(ticket.id);
         tickets.push(ticket);
         // Store raw text using invoice ID as key
         rawTexts[ticket.id] = text;
       }
-      
+
       processed++;
       if (progressCallback) {
         progressCallback(processed, files.length, file.name);
@@ -697,15 +697,15 @@ async function processPDFs(files, progressCallback) {
       console.error(`Error processing ${file.name}:`, error);
     }
   }
-  
+
   // Save raw texts for future re-parsing
   if (Object.keys(rawTexts).length > 0) {
     saveRawTexts(rawTexts);
   }
-  
+
   // Sort by date
   tickets.sort((a, b) => a.date.localeCompare(b.date));
-  
+
   return tickets;
 }
 
@@ -721,7 +721,7 @@ function buildTicketsData(tickets) {
       color: value.color
     };
   }
-  
+
   return {
     meta: {
       lastUpdated: new Date().toISOString().split('T')[0],
@@ -740,43 +740,197 @@ function buildTicketsData(tickets) {
  */
 function migrateTicketsData(data) {
   const currentVersion = data?.meta?.parserVersion;
-  
+
   if (currentVersion === PARSER_VERSION) {
     return { data, migrated: false };
   }
-  
+
   console.log(`Migrating tickets from version ${currentVersion || 'unknown'} to ${PARSER_VERSION}`);
-  
+
   // Try to re-parse from raw texts first (full re-parse)
   const rawTexts = getRawTexts();
   if (Object.keys(rawTexts).length > 0) {
     console.log('Raw texts available, performing full re-parse...');
     const reparsedTickets = reparseFromRawTexts();
-    
+
     if (reparsedTickets && reparsedTickets.length > 0) {
       const migratedData = buildTicketsData(reparsedTickets);
       console.log(`Full re-parse complete: ${reparsedTickets.length} tickets updated to parser v${PARSER_VERSION}`);
       return { data: migratedData, migrated: true };
     }
   }
-  
+
   // Fallback: just re-categorize existing products
   console.log('No raw texts available, re-categorizing products only...');
   const tickets = data.tickets || data;
-  
+
   // Re-categorize all products
   for (const ticket of tickets) {
     for (const item of ticket.items) {
       item.category = categorizeProduct(item.name);
     }
   }
-  
+
   // Rebuild data structure with updated version
   const migratedData = buildTicketsData(tickets);
-  
+
   console.log(`Migration complete: ${tickets.length} tickets updated to parser v${PARSER_VERSION}`);
-  
+
   return { data: migratedData, migrated: true };
+}
+
+/**
+ * Extract text from Image using Tesseract.js
+ */
+async function extractTextFromImage(file) {
+  try {
+    const { data: { text } } = await Tesseract.recognize(
+      file,
+      'spa', // Spanish language
+      { logger: m => console.log(m) } // Optional logger
+    );
+    return text;
+  } catch (error) {
+    console.error("OCR Error:", error);
+    throw new Error("Error al leer la imagen: " + error.message);
+  }
+}
+
+/**
+ * Parse a Lidl ticket text
+ */
+function parseLidlTicket(text, filename) {
+  // Common Lidl patterns
+  // Date: "Fecha: 22/10/2023" or just "22/10/2023"
+  // Total: "TOTAL A PAGAR ... 23,45"
+
+  const lines = text.split('\n');
+
+  // 1. Find Date and Time
+  let dateStr, timeStr;
+  const dateMatch = text.match(/(\d{2}\/\d{2}\/\d{4})/);
+  const timeMatch = text.match(/(\d{2}:\d{2})/);
+
+  if (dateMatch) {
+    const [day, month, year] = dateMatch[1].split('/');
+    dateStr = formatLocalDate(year, month, day);
+  } else {
+    // Fallback: try to find date in filename or use today
+    dateStr = new Date().toISOString().split('T')[0];
+  }
+
+  timeStr = timeMatch ? timeMatch[1] : "00:00";
+
+  // 2. Find Total
+  let total = 0;
+  // Look for TOTAL line
+  const totalMatch = text.match(/TOTAL\s*(?:A PAGAR)?\s*(?:EUR|€)?\s*([\d,]+)/i);
+  if (totalMatch) {
+    total = parseFloat(totalMatch[1].replace(',', '.'));
+  }
+
+  // 3. Parse Items
+  const items = [];
+  let inItems = false;
+
+  // Lidl items usually start after header and end before Total
+  // We look for lines with a price at the end
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+
+    // Skip empty or short lines
+    if (line.length < 3) continue;
+
+    // Stop at Total
+    if (/TOTAL/i.test(line)) break;
+
+    // Skip common headers
+    if (/LIDL|TIENDA|C.I.F|CAJERA|CLIENTE/i.test(line)) continue;
+
+    // Item pattern: Description ... Price (e.g., "Pimientos 1,29 A")
+    // Note: Lidl often puts a tax code (A, B) after the price
+    const itemMatch = line.match(/^(.+?)\s+([\d,]+)\s*[AB]?$/);
+
+    if (itemMatch) {
+      const name = itemMatch[1].trim();
+      const price = parseFloat(itemMatch[2].replace(',', '.'));
+
+      // Filter out noise
+      if (name.length > 2 && !isNaN(price)) {
+        items.push({
+          name: name,
+          price: price,
+          quantity: 1, // Default to 1 as Lidl often lists weight on prev line or just total price
+          unitPrice: price,
+          category: categorizeProduct(name)
+        });
+      }
+    }
+  }
+
+  // If no total found but we have items, sum them up
+  if (total === 0 && items.length > 0) {
+    total = items.reduce((sum, item) => sum + item.price, 0);
+  }
+
+  // Generate ID
+  const invoiceId = `LIDL-${dateStr.replace(/-/g, '')}-${Math.floor(Math.random() * 10000)}`;
+
+  return {
+    id: invoiceId,
+    date: dateStr,
+    time: timeStr,
+    total: total,
+    store: "Lidl",
+    items: items
+  };
+}
+
+/**
+ * Process multiple Image files
+ */
+async function processImages(files, progressCallback) {
+  const tickets = [];
+  let processed = 0;
+
+  for (const file of files) {
+    try {
+      if (progressCallback) {
+        progressCallback(processed, files.length, file.name + " (Leyendo...)");
+      }
+
+      const text = await extractTextFromImage(file);
+
+      if (progressCallback) {
+        progressCallback(processed, files.length, file.name + " (Procesando...)");
+      }
+
+      // Determine if it's Lidl or Mercadona based on text content
+      let ticket;
+      if (text.toUpperCase().includes("MERCADONA")) {
+        // Reuse Mercadona logic if someone uploads a photo of a Mercadona ticket
+        ticket = parseSinglePDFText(text, file.name);
+      } else {
+        // Assume Lidl or generic
+        ticket = parseLidlTicket(text, file.name);
+      }
+
+      if (ticket) {
+        tickets.push(ticket);
+      }
+
+      processed++;
+      if (progressCallback) {
+        progressCallback(processed, files.length, file.name);
+      }
+
+    } catch (error) {
+      console.error(`Error processing image ${file.name}:`, error);
+    }
+  }
+
+  return tickets;
 }
 
 /**

@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Estadísticas de Compras</title>
-  
+
   <!-- Google Fonts - Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
+
   <!-- CSS Modules -->
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/themes.css">
-  
+
   <!-- Tab-specific CSS -->
   <link rel="stylesheet" href="css/tabs/shared.css">
   <link rel="stylesheet" href="css/tabs/insights.css">
@@ -22,13 +23,14 @@
   <link rel="stylesheet" href="css/tabs/prices.css">
   <link rel="stylesheet" href="css/tabs/tickets.css">
   <link rel="stylesheet" href="css/tabs/categories.css">
-  
+
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
+
 <body>
   <div class="container">
-    
+
     <!-- Header -->
     <header class="header">
       <div class="header-left">
@@ -48,7 +50,8 @@
             <option value="all">Todos los años</option>
           </select>
         </div>
-        <button class="icon-btn" id="downloadBtn" onclick="downloadGeneratedJSON()" title="Descargar tickets.json">⬇</button>
+        <button class="icon-btn" id="downloadBtn" onclick="downloadGeneratedJSON()"
+          title="Descargar tickets.json">⬇</button>
         <button class="icon-btn" id="addDataBtn" onclick="showDataLoaderModal()" title="Añadir más tickets">+</button>
       </div>
     </header>
@@ -77,7 +80,7 @@
 
     <!-- ==================== OVERVIEW TAB ==================== -->
     <section id="overviewTab" class="tab-content active">
-      
+
       <!-- Stats Cards -->
       <div class="grid">
         <div class="card">
@@ -139,7 +142,7 @@
 
     <!-- ==================== CATEGORIES TAB ==================== -->
     <section id="categoriesTab" class="tab-content">
-      
+
       <div class="grid grid-2">
         <!-- Category Chart -->
         <div class="chart-container">
@@ -148,12 +151,14 @@
             <canvas id="categoryChart"></canvas>
           </div>
         </div>
-        
+
         <!-- Category List -->
         <div class="chart-container">
           <h3>Detalle por Categoría</h3>
           <div class="category-list" id="categoryList">
-            <div class="loading"><div class="spinner"></div></div>
+            <div class="loading">
+              <div class="spinner"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -177,7 +182,9 @@
           </select>
         </h3>
         <div id="categoryProductList">
-          <div class="loading"><div class="spinner"></div></div>
+          <div class="loading">
+            <div class="spinner"></div>
+          </div>
         </div>
       </div>
 
@@ -185,7 +192,7 @@
 
     <!-- ==================== PRODUCTS TAB ==================== -->
     <section id="productsTab" class="tab-content">
-      
+
       <!-- Search -->
       <div class="chart-container">
         <h3>Buscar Producto</h3>
@@ -208,14 +215,16 @@
           <canvas id="topProductsChart"></canvas>
         </div>
       </div>
-      
+
       <!-- Product Table -->
       <div class="chart-container">
-        <h3>Todos los Productos 
+        <h3>Todos los Productos
           <span class="badge badge-primary" id="productCountBadge">0 productos</span>
         </h3>
         <div id="productTable">
-          <div class="loading"><div class="spinner"></div></div>
+          <div class="loading">
+            <div class="spinner"></div>
+          </div>
         </div>
       </div>
 
@@ -223,7 +232,7 @@
 
     <!-- ==================== PRICE HISTORY TAB ==================== -->
     <section id="pricesTab" class="tab-content">
-      
+
       <!-- Price Summary Cards -->
       <div class="stats-grid" id="priceSummaryCards">
         <!-- Will be populated by JS -->
@@ -242,12 +251,25 @@
       <div class="chart-container">
         <h3>Evolución Individual
           <select id="productPriceSelect" class="inline-select"></select>
+          </select>
         </h3>
         <div id="individualPriceChart" class="chart-wrapper">
-          <p style="text-align: center; color: var(--text-muted); padding: 40px;">Selecciona un producto para ver su evolución de precio</p>
+          <p style="text-align: center; color: var(--text-muted); padding: 40px;">Selecciona un producto para ver su
+            evolución de precio</p>
         </div>
       </div>
-      
+
+      <!-- Price Comparison -->
+      <div class="chart-container">
+        <h3>Comparador de Precios entre Tiendas
+          <select id="comparisonProductSelect" class="inline-select"></select>
+        </h3>
+        <div id="priceComparisonContainer">
+          <p style="text-align: center; color: var(--text-muted); padding: 40px;">Selecciona un producto para comparar
+            precios entre tiendas</p>
+        </div>
+      </div>
+
       <!-- Price Changes Table -->
       <div class="chart-container">
         <h3>Variación de Precios
@@ -258,7 +280,9 @@
           </select>
         </h3>
         <div id="priceChangeTable">
-          <div class="loading"><div class="spinner"></div></div>
+          <div class="loading">
+            <div class="spinner"></div>
+          </div>
         </div>
       </div>
 
@@ -288,7 +312,9 @@
           </select>
         </h3>
         <div id="ticketListContainer" class="ticket-list">
-          <div class="loading"><div class="spinner"></div></div>
+          <div class="loading">
+            <div class="spinner"></div>
+          </div>
         </div>
       </div>
 
@@ -303,49 +329,49 @@
     <!-- ==================== INSIGHTS TAB ==================== -->
     <section id="insightsTab" class="tab-content">
       <div class="insights-dashboard">
-          <!-- Top Row -->
-          <div class="insight-card price-alerts-card">
-              <h3>Alertas de Precios Importantes</h3>
-              <div id="priceAlertsList" class="alerts-container"></div>
-          </div>
+        <!-- Top Row -->
+        <div class="insight-card price-alerts-card">
+          <h3>Alertas de Precios Importantes</h3>
+          <div id="priceAlertsList" class="alerts-container"></div>
+        </div>
 
-          <!-- Middle Row -->
-          <div class="insight-card habits-card">
-              <h3>Hábitos de Compra</h3>
-              <div class="habits-container">
-                  <div class="habit-box">
-                      <span class="habit-label">Momento Favorito</span>
-                      <div class="habit-value-row">
-                          <span id="favDay">Viernes</span>
-                      </div>
-                      <div class="habit-value-row">
-                          <span id="favTime">18:00 - 19:00</span>
-                      </div>
-                  </div>
-                  <div class="habit-box">
-                      <span class="habit-label">Intervalo Medio entre Compras</span>
-                      <div class="habit-big-value">
-                          <span id="avgInterval">7.5</span> <span class="unit">Días</span>
-                      </div>
-                      <div class="habit-trend">
-                          <span id="intervalTrend">Similar al mes pasado</span>
-                      </div>
-                  </div>
+        <!-- Middle Row -->
+        <div class="insight-card habits-card">
+          <h3>Hábitos de Compra</h3>
+          <div class="habits-container">
+            <div class="habit-box">
+              <span class="habit-label">Momento Favorito</span>
+              <div class="habit-value-row">
+                <span id="favDay">Viernes</span>
               </div>
+              <div class="habit-value-row">
+                <span id="favTime">18:00 - 19:00</span>
+              </div>
+            </div>
+            <div class="habit-box">
+              <span class="habit-label">Intervalo Medio entre Compras</span>
+              <div class="habit-big-value">
+                <span id="avgInterval">7.5</span> <span class="unit">Días</span>
+              </div>
+              <div class="habit-trend">
+                <span id="intervalTrend">Similar al mes pasado</span>
+              </div>
+            </div>
           </div>
+        </div>
 
-          <div class="insight-card heatmap-card">
-              <h3>Patrones de Compra (Mapa de Calor)</h3>
-              <div class="heatmap-wrapper">
-                   <div class="heatmap-labels-y">
-                      <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
-                   </div>
-                   <div id="heatmapGrid" class="heatmap-grid"></div>
-                   <div class="heatmap-labels-x">
-                      <span>8h</span><span>9h</span><span>10h</span><span>11h</span><span>12h</span><span>13h</span><span>14h</span><span>15h</span><span>16h</span><span>17h</span><span>18h</span><span>19h</span><span>20h</span><span>21h</span><span>22h</span>
-                   </div>
-              </div>
+        <div class="insight-card heatmap-card">
+          <h3>Patrones de Compra (Mapa de Calor)</h3>
+          <div class="heatmap-wrapper">
+            <div class="heatmap-labels-y">
+              <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+            </div>
+            <div id="heatmapGrid" class="heatmap-grid"></div>
+            <div class="heatmap-labels-x">
+              <span>8h</span><span>9h</span><span>10h</span><span>11h</span><span>12h</span><span>13h</span><span>14h</span><span>15h</span><span>16h</span><span>17h</span><span>18h</span><span>19h</span><span>20h</span><span>21h</span><span>22h</span>
+            </div>
           </div>
+        </div>
       </div>
     </section>
 
@@ -360,7 +386,7 @@
       </div>
       <div class="modal-body">
         <p class="modal-intro">No se encontró ningún archivo de datos. Puedes cargar tus tickets de dos formas:</p>
-        
+
         <div class="loader-options">
           <!-- Option 1: JSON File -->
           <div class="loader-option">
@@ -380,28 +406,28 @@
               <button id="jsonConfirmBtn" class="btn btn-danger">Aceptar y reemplazar</button>
             </div>
           </div>
-          
+
           <div class="loader-divider">
             <span>o</span>
           </div>
-          
-          <!-- Option 2: PDF Files -->
+
+          <!-- Option 2: Files (PDF/Images) -->
           <div class="loader-option">
-            <h3>Cargar tickets en PDF</h3>
-            <p>Sube los PDFs de tus tickets de Mercadona para procesarlos:</p>
+            <h3>Cargar tickets (PDF/Imagen)</h3>
+            <p>Sube tus tickets de Mercadona (PDF) o Lidl (Imagen) para procesarlos:</p>
             <div id="pdfDropzone" class="dropzone">
               <div class="dropzone-content">
                 <span class="dropzone-icon">↓</span>
-                <p>Arrastra tus PDFs aquí</p>
-                <p class="text-muted">o haz clic para seleccionar (múltiples archivos)</p>
+                <p>Arrastra tus archivos aquí</p>
+                <p class="text-muted">o haz clic para seleccionar (PDF, JPG, PNG)</p>
               </div>
-              <input type="file" id="pdfFileInput" accept=".pdf" multiple hidden>
+              <input type="file" id="pdfFileInput" accept=".pdf, .jpg, .jpeg, .png" multiple hidden>
             </div>
             <div id="pdfFileList" class="file-list-container">
               <p class="text-muted">No hay archivos seleccionados</p>
             </div>
             <button id="processPdfsBtn" class="btn btn-primary" disabled>
-              Procesar PDFs
+              Procesar Tickets
             </button>
             <div id="pdfProgress" class="progress-container" style="display: none;"></div>
           </div>
@@ -422,6 +448,9 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   </script>
 
+  <!-- Tesseract.js for Image OCR -->
+  <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+
   <!-- JS Modules -->
   <script src="js/utils.js"></script>
   <script src="js/charts.js"></script>
@@ -435,4 +464,5 @@
   <script src="js/tabs/insights.js"></script>
   <script src="js/app.js"></script>
 </body>
+
 </html>
