@@ -11,7 +11,7 @@ let fullData = null; // Complete data including categories
 let productMapping = {}; // Canonical name mapping: { "leche hacendado": "leche", "leche milbona": "leche" }
 
 // App version - increment to force cache clear
-const APP_VERSION = '2.1.0';
+const APP_VERSION = '2.2.0';
 const APP_VERSION_KEY = 'shopping_app_version';
 
 // Note: charts registry is defined in js/charts.js
@@ -96,14 +96,22 @@ async function init() {
     showDataLoaderModal();
   } else {
     // Load mappings
-    try {
-      const savedMapping = localStorage.getItem('shopping_product_mapping');
-      if (savedMapping) {
-        productMapping = JSON.parse(savedMapping);
-        console.log(`Loaded ${Object.keys(productMapping).length} product aliases`);
+    if (fullData && fullData.productMapping) {
+      productMapping = fullData.productMapping;
+      console.log(`Loaded ${Object.keys(productMapping).length} product aliases from tickets data`);
+    } else {
+      // Fallback to legacy separate key if exists, then migrate
+      try {
+        const savedMapping = localStorage.getItem('shopping_product_mapping');
+        if (savedMapping) {
+          productMapping = JSON.parse(savedMapping);
+          console.log(`Loaded ${Object.keys(productMapping).length} product aliases from items (migrating...)`);
+          // We will save it into main data structure on next save
+          updateProductMapping("force_save", null);
+        }
+      } catch (e) {
+        console.warn('Error loading product mappings');
       }
-    } catch (e) {
-      console.warn('Error loading product mappings');
     }
 
     startApp();
@@ -120,16 +128,29 @@ function getNormalizedName(rawName) {
 
 // Helper to update product mapping
 function updateProductMapping(rawName, canonicalName) {
-  const key = rawName.toLowerCase().trim();
-  if (!canonicalName) {
-    delete productMapping[key];
+  if (rawName === "force_save") {
+    // Just save
   } else {
-    productMapping[key] = canonicalName;
+    const key = rawName.toLowerCase().trim();
+    if (!canonicalName) {
+      delete productMapping[key];
+    } else {
+      productMapping[key] = canonicalName;
+    }
   }
 
-  // Save to localStorage
+  // Update fullData
+  if (fullData) {
+    fullData.productMapping = productMapping;
+  }
+
+  // Save to localStorage (main data)
   try {
-    localStorage.setItem('shopping_product_mapping', JSON.stringify(productMapping));
+    if (fullData) {
+      localStorage.setItem('shopping_tickets_data', JSON.stringify(fullData));
+    }
+    // Remove legacy key if exists
+    localStorage.removeItem('shopping_product_mapping');
   } catch (e) {
     console.warn('Could not save product mapping');
   }
@@ -507,7 +528,7 @@ async function handlePDFProcess() {
     const addedCount = mergedTickets.length - existingTickets.length;
     const duplicateCount = newTickets.length - addedCount;
 
-    fullData = buildTicketsData(mergedTickets);
+    fullData = buildTicketsData(mergedTickets, productMapping); // Use global productMapping
     ticketsData = mergedTickets;
 
     let statusMsg = `${addedCount} tickets nuevos añadidos`;

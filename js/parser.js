@@ -4,7 +4,7 @@
    ============================================ */
 
 // Parser version - increment when categorization logic changes
-const PARSER_VERSION = '2.1.0';
+const PARSER_VERSION = '2.2.0';
 
 // Storage key for raw PDF texts
 const RAW_TEXTS_KEY = 'mercadona_raw_texts';
@@ -712,7 +712,7 @@ async function processPDFs(files, progressCallback) {
 /**
  * Build the complete data structure from tickets
  */
-function buildTicketsData(tickets) {
+function buildTicketsData(tickets, mapping = {}) {
   const categories = {};
   for (const [key, value] of Object.entries(CATEGORIES_CONFIG)) {
     categories[key] = {
@@ -730,6 +730,7 @@ function buildTicketsData(tickets) {
       parserVersion: PARSER_VERSION
     },
     categories: categories,
+    productMapping: mapping,
     tickets: tickets
   };
 }
@@ -741,11 +742,18 @@ function buildTicketsData(tickets) {
 function migrateTicketsData(data) {
   const currentVersion = data?.meta?.parserVersion;
 
+  // Assume latest version if matches, BUT ensure productMapping exists
   if (currentVersion === PARSER_VERSION) {
+    if (!data.productMapping) {
+      data.productMapping = {}; // Backward compatibility fix
+    }
     return { data, migrated: false };
   }
 
   console.log(`Migrating tickets from version ${currentVersion || 'unknown'} to ${PARSER_VERSION}`);
+
+  // Preserve existing mapping if available
+  const existingMapping = data.productMapping || {};
 
   // Try to re-parse from raw texts first (full re-parse)
   const rawTexts = getRawTexts();
@@ -754,7 +762,8 @@ function migrateTicketsData(data) {
     const reparsedTickets = reparseFromRawTexts();
 
     if (reparsedTickets && reparsedTickets.length > 0) {
-      const migratedData = buildTicketsData(reparsedTickets);
+      // Pass existing mapping to buildTicketsData so we don't lose it
+      const migratedData = buildTicketsData(reparsedTickets, existingMapping);
       console.log(`Full re-parse complete: ${reparsedTickets.length} tickets updated to parser v${PARSER_VERSION}`);
       return { data: migratedData, migrated: true };
     }
@@ -772,7 +781,7 @@ function migrateTicketsData(data) {
   }
 
   // Rebuild data structure with updated version
-  const migratedData = buildTicketsData(tickets);
+  const migratedData = buildTicketsData(tickets, existingMapping);
 
   console.log(`Migration complete: ${tickets.length} tickets updated to parser v${PARSER_VERSION}`);
 
