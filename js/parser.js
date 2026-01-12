@@ -808,69 +808,144 @@ async function extractTextFromImage(file) {
 /**
  * Parse a Lidl ticket text
  */
-function parseLidlTicket(text, filename) {
-  // Common Lidl patterns
-  // Date: "Fecha: 22/10/2023" or just "22/10/2023"
-  // Total: "TOTAL A PAGAR ... 23,45"
+/**
+ * Helper to sanitize OCR dates
+ * Tries to find a valid date in the past/present
+ */
+function sanitizeOCRDate(text) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
 
+  // Regex for multiple formats: DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY, DD.MM.YY
+  // Captured groups: 1=Day, 2=Month, 3=Year
+  const datePatterns = [
+    /(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/, // DD/MM/YYYY
+    /(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{2})\b/ // DD/MM/YY
+  ];
+
+  for (const pattern of datePatterns) {
+    const matches = text.matchAll(new RegExp(pattern, 'g'));
+    for (const match of matches) {
+      let d = parseInt(match[1]);
+      let m = parseInt(match[2]);
+      let y = parseInt(match[3]);
+
+      // Fix 2-digit year
+      if (y < 100) y += 2000;
+
+      // Sanity check
+      if (m < 1 || m > 12) continue;
+      if (d < 1 || d > 31) continue;
+      if (y < 2000 || y > currentYear + 1) continue; // Allow +1 just in case of timezone/near year end, but generally strict
+
+      // If date is in future (significantly), reject
+      const checkDate = new Date(y, m - 1, d);
+      if (checkDate > new Date(now.getTime() + 86400000)) continue; // Allow 1 day margin
+
+      return formatLocalDate(y, m, d);
+    }
+  }
+
+  return null; // No valid date found
+}
+
+/**
+ * Helper to sanitize OCR prices
+ * Fixes common issues like missing decimal points (600 -> 6.00)
+ */
+function sanitizeOCRPrice(rawPrice) {
+  if (isNaN(rawPrice) || rawPrice <= 0) return 0;
+
+  // Heuristic: Grocery items are rarely > 100€
+  // If price > 50 and looks like an integer, likely missing decimal
+  if (rawPrice > 50 && Number.isInteger(rawPrice)) {
+    // Try dividing by 100 (e.g. 145 -> 1.45)
+    return rawPrice / 100;
+  }
+
+  // Heuristic: If extremely high (e.g. > 200) even with decimal
+  if (rawPrice > 200) {
+    // Could be missing decimal in a different way or noise
+    // Try to make it reasonable (e.g. < 20)
+    if (rawPrice / 100 < 20) return rawPrice / 100;
+    if (rawPrice / 10 < 20) return rawPrice / 10;
+  }
+
+  return rawPrice;
+}
+
+/**
+ * Parse a Lidl ticket text (Improved for OCR)
+ */
+function parseLidlTicket(text, filename) {
   const lines = text.split('\n');
 
-  // 1. Find Date and Time
-  let dateStr, timeStr;
-  const dateMatch = text.match(/(\d{2}\/\d{2}\/\d{4})/);
-  const timeMatch = text.match(/(\d{2}:\d{2})/);
+  // 1. Find Date (Improved)
+  // Look for "Fecha" keyword first to be more accurate
+  let dateStr = sanitizeOCRDate(text);
 
-  if (dateMatch) {
-    const [day, month, year] = dateMatch[1].split('/');
-    dateStr = formatLocalDate(year, month, day);
-  } else {
-    // Fallback: try to find date in filename or use today
+  if (!dateStr) {
+    console.warn(`No valid date found in ${filename}, using today's date.`);
     dateStr = new Date().toISOString().split('T')[0];
   }
 
-  timeStr = timeMatch ? timeMatch[1] : "00:00";
+  let timeMatch = text.match(/(\d{2}:\d{2})/);
+  let timeStr = timeMatch ? timeMatch[1] : "00:00";
 
   // 2. Find Total
   let total = 0;
-  // Look for TOTAL line
-  const totalMatch = text.match(/TOTAL\s*(?:A PAGAR)?\s*(?:EUR|€)?\s*([\d,]+)/i);
+  // Look for TOTAL line more flexibly
+  // "TOTAL" followed by numbers, possibly with EUR/€, allows spaces inside number '23, 45'
+  const totalRegex = /TOTAL\s*(?:A PAGAR)?\s*(?:EUR|€)?.*?([\d\.,]+(?:[\s\.,]\d{2})?)/i;
+  const totalMatch = text.match(totalRegex);
+
   if (totalMatch) {
-    total = parseFloat(totalMatch[1].replace(',', '.'));
+    // Clean up total string (remove internal spaces, fix dots/commas)
+    let cleanTotal = totalMatch[1].replace(/\s/g, '').replace(',', '.');
+    // If multiple dots, only keep last one? Standardize.
+    total = parseFloat(cleanTotal);
+    total = sanitizeOCRPrice(total);
   }
 
   // 3. Parse Items
   const items = [];
-  let inItems = false;
 
-  // Lidl items usually start after header and end before Total
-  // We look for lines with a price at the end
+  // Lidl items: Description ... Price [TaxCode]
+  // We scan all lines.
+  const itemRegex = /^(.+?)\s+(\d+[\.,]\d{2}|\d+)\s*[AB]?$/;
+  // Captures: 1=Name, 2=Price. Expects price to be at end of line.
+
+  // More cleanup for OCR text
+  const skipPatterns = [/SUBTOTAL/i, /TOTAL/i, /ENTREGADO/i, /CAMBIO/i, /TARJETA/i, /LIDL/i, /TIENDA/i];
 
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i].trim();
-
-    // Skip empty or short lines
     if (line.length < 3) continue;
+    if (skipPatterns.some(p => p.test(line))) continue;
 
-    // Stop at Total
-    if (/TOTAL/i.test(line)) break;
+    // Try detecting price at end of line
+    // Look for number at end
+    const lastNumMatch = line.match(/(\d+[\.,]?\d*)\s*[AB]?$/);
+    if (lastNumMatch) {
+      const rawPriceStr = lastNumMatch[1];
+      const rawPrice = parseFloat(rawPriceStr.replace(',', '.'));
 
-    // Skip common headers
-    if (/LIDL|TIENDA|C.I.F|CAJERA|CLIENTE/i.test(line)) continue;
+      // Sanity check price
+      const price = sanitizeOCRPrice(rawPrice);
 
-    // Item pattern: Description ... Price (e.g., "Pimientos 1,29 A")
-    // Note: Lidl often puts a tax code (A, B) after the price
-    const itemMatch = line.match(/^(.+?)\s+([\d,]+)\s*[AB]?$/);
+      // Extract name part (everything before the price)
+      let name = line.substring(0, line.lastIndexOf(rawPriceStr)).trim();
 
-    if (itemMatch) {
-      const name = itemMatch[1].trim();
-      const price = parseFloat(itemMatch[2].replace(',', '.'));
+      // Cleanup name
+      name = name.replace(/[\d\.]+$/, '').trim(); // Remove trailing numbers/dots
+      if (name.length < 2) continue; // Too short
 
-      // Filter out noise
-      if (name.length > 2 && !isNaN(price)) {
+      // If price is reasonable, add item
+      if (price > 0 && price < 200) {
         items.push({
           name: name,
           price: price,
-          quantity: 1, // Default to 1 as Lidl often lists weight on prev line or just total price
+          quantity: 1,
           unitPrice: price,
           category: categorizeProduct(name)
         });
@@ -883,14 +958,16 @@ function parseLidlTicket(text, filename) {
     total = items.reduce((sum, item) => sum + item.price, 0);
   }
 
-  // Generate ID
-  const invoiceId = `LIDL-${dateStr.replace(/-/g, '')}-${Math.floor(Math.random() * 10000)}`;
+  // Generate ID based on filename hash to allow re-importing same file correctly
+  // Simple hash of filename + date
+  const cleanFilename = filename.replace(/[^a-z0-9]/gi, '');
+  const invoiceId = `LIDL-${dateStr.replace(/-/g, '')}-${Math.abs(cleanFilename.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0))}`;
 
   return {
     id: invoiceId,
     date: dateStr,
     time: timeStr,
-    total: total,
+    total: Math.round(total * 100) / 100,
     store: "Lidl",
     items: items
   };
