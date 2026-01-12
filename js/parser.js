@@ -875,19 +875,26 @@ function sanitizeOCRDate(text) {
 function sanitizeOCRPrice(rawPrice) {
   if (isNaN(rawPrice) || rawPrice <= 0) return 0;
 
-  // Heuristic: Grocery items are rarely > 100€
-  // If price > 50 and looks like an integer, likely missing decimal
+  // Heuristic: Grocery items are rarely > 50€ unit price
+  // If it looks like 60.95 for "Gnocchi", it's likely a misread 0.95 or 1.95?
+  // OR it could be 6095 -> 60.95 (which is still wrong) -> 6.09?
+
+  // 1. Check for missing decimal in integers (e.g. 145 -> 1.45)
   if (rawPrice > 50 && Number.isInteger(rawPrice)) {
-    // Try dividing by 100 (e.g. 145 -> 1.45)
     return rawPrice / 100;
   }
 
-  // Heuristic: If extremely high (e.g. > 200) even with decimal
-  if (rawPrice > 200) {
-    // Could be missing decimal in a different way or noise
-    // Try to make it reasonable (e.g. < 20)
-    if (rawPrice / 100 < 20) return rawPrice / 100;
-    if (rawPrice / 10 < 20) return rawPrice / 10;
+  // 2. High value handling
+  if (rawPrice > 50) {
+    // Extremely unlikely for a single grocery item to be > 50€ unless it's "Jamón" whole leg.
+    // But "Jamón ibérico cebo" in the example was 92.18, which might be real if it's a whole piece?
+    // However, "Gnocchi" at 60.95 is definitely wrong.
+
+    // If it's NOT a whole ham/shoulder/alcohol, cap it?
+    // Hard to know category here inside helper.
+
+    // Let's assume most items > 100 are wrong decimals
+    if (rawPrice > 100) return rawPrice / 100;
   }
 
   return rawPrice;
@@ -930,20 +937,42 @@ function parseLidlTicket(text, filename) {
   const items = [];
 
   // Lidl items: Description ... Price [TaxCode]
-  // We scan all lines.
   const itemRegex = /^(.+?)\s+(\d+[\.,]\d{2}|\d+)\s*[AB]?$/;
-  // Captures: 1=Name, 2=Price. Expects price to be at end of line.
 
-  // More cleanup for OCR text
-  const skipPatterns = [/SUBTOTAL/i, /TOTAL/i, /ENTREGADO/i, /CAMBIO/i, /TARJETA/i, /LIDL/i, /TIENDA/i];
+  // STOP patterns: Once we see these, we likely left the items section
+  // "Suma", "Resto", "Entregado", "Tarjeta", "Cambio", Tax Summary lines (A %, B %), Footer phones
+  const stopPatterns = [
+    /^TOTAL/i, /^SUMA/i, /^RESTO/i, /^ENTREGADO/i, /^CAMBIO/i, /^TARJETA/i,
+    /^[A-Z]\s+\d+\s?%/i, // Tax lines: "B 10 %"
+    /IVA/i,
+    /^\d{4}\s+\d+\/\d+/ // Footer with store ID/date logic
+  ];
+
+  // SKIP patterns: Lines to ignore inside the block
+  const skipPatterns = [/LIDL/i, /TIENDA/i, /CLIENTE/i, /CAJERA/i];
 
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i].trim();
     if (line.length < 3) continue;
+
+    // Check Stop Patterns
+    if (stopPatterns.some(p => p.test(line))) {
+      // If we found specific footer lines, likely done with items
+      // But continue checking just in case it's a false positive? 
+      // No, Lidl structure is usually sequential.
+      // Exception: "Suma" usually marks end of items before discounts/total.
+      break;
+    }
+
     if (skipPatterns.some(p => p.test(line))) continue;
 
+    // Ignore lines that are just dates/times (common OCR artifact repeating header)
+    if (/^\d{2}[\/\.-]\d{2}[\/\.-]\d{2,4}/.test(line) || /^\d{2}:\d{2}/.test(line)) continue;
+
+    // Ignore lines that look like tax summary "A 10% 4.50"
+    if (/^[A-Z]\s+\d+%/.test(line)) continue;
+
     // Try detecting price at end of line
-    // Look for number at end
     const lastNumMatch = line.match(/(\d+[\.,]?\d*)\s*[AB]?$/);
     if (lastNumMatch) {
       const rawPriceStr = lastNumMatch[1];
@@ -959,7 +988,13 @@ function parseLidlTicket(text, filename) {
       name = name.replace(/[\d\.]+$/, '').trim(); // Remove trailing numbers/dots
       if (name.length < 2) continue; // Too short
 
+      // Reject if name looks like a date/time or garbage
+      if (/^\d+$/.test(name)) continue; // Just numbers
+      if (name.includes('%') && name.length < 10) continue; // Short percentage line
+
       // If price is reasonable, add item
+      // Note: Allow expensive items for now, user can edit json if needed, 
+      // but > 200 is definitely blocked by sanitizeOCRPrice logic
       if (price > 0 && price < 200) {
         items.push({
           name: name,
@@ -978,7 +1013,6 @@ function parseLidlTicket(text, filename) {
   }
 
   // Generate ID based on filename hash to allow re-importing same file correctly
-  // Simple hash of filename + date
   const cleanFilename = filename.replace(/[^a-z0-9]/gi, '');
   const invoiceId = `LIDL-${dateStr.replace(/-/g, '')}-${Math.abs(cleanFilename.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0))}`;
 
