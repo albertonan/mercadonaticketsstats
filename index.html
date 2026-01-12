@@ -220,6 +220,8 @@
       <div class="chart-container">
         <h3>Todos los Productos
           <span class="badge badge-primary" id="productCountBadge">0 productos</span>
+          <button class="btn-small" id="manageAliasesBtn" style="float: right; margin-left: auto;">Gestionar
+            Agrupaciones (Alias)</button>
         </h3>
         <div id="productTable">
           <div class="loading">
@@ -229,6 +231,91 @@
       </div>
 
     </section>
+
+    <!-- Product Grouping Modal -->
+    <div id="groupingModal" class="modal">
+      <div class="modal-content" style="max-width: 900px; display: flex; flex-direction: column; height: 90vh;">
+        <div class="modal-header"
+          style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+          <h2 style="font-size: 1.25rem; font-weight: 700;">Agrupación de Productos (Alias)</h2>
+          <span class="modal-close" id="closeGroupingModalBtn">&times;</span>
+        </div>
+
+        <div class="modal-body" style="flex: 1; overflow-y: auto; display: flex; gap: 20px;">
+          <!-- Left: Unmapped Products -->
+          <div class="col" style="flex: 1; display: flex; flex-direction: column;">
+            <h4 style="margin-bottom: 10px;">Productos Sin Agrupar
+              <button class="btn-small" id="autoSuggestBtn"
+                style="font-size: 0.7rem; float: right; background: var(--info);">✨ Auto-Detectar</button>
+            </h4>
+            <input type="text" id="groupingSearch" placeholder="Filtrar productos..." class="search-input"
+              style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 4px;">
+            <div id="unmappedList"
+              style="flex: 1; border: 1px solid var(--border-color); border-radius: 4px; overflow-y: auto; padding: 5px; height: 300px;">
+            </div>
+            <div style="margin-top: 5px; font-size: 0.8rem; color: var(--text-muted);">Selecciona productos para
+              vincular</div>
+          </div>
+
+          <!-- Middle: Actions -->
+          <div class="col"
+            style="width: 60px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px;">
+            <button id="linkProductsBtn" class="icon-btn" title="Vincular selección" disabled>→</button>
+          </div>
+
+          <!-- Right: Canonical Groups -->
+          <div class="col" style="flex: 1; display: flex; flex-direction: column;">
+            <h4 style="margin-bottom: 10px;">Grupos (Nombres Canónicos)
+              <button class="btn-small" id="newGroupBtn"
+                style="font-size: 0.7rem; float: right; background: var(--success);">+ Nuevo Grupo</button>
+            </h4>
+            <div id="canonicalList"
+              style="flex: 1; border: 1px solid var(--border-color); border-radius: 4px; overflow-y: auto; padding: 5px; height: 300px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer / Editor -->
+        <div class="modal-footer" id="groupEditor"
+          style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 15px; display: none;">
+          <h4 style="margin-bottom: 10px;">Editando Grupo</h4>
+          <div style="display: flex; gap: 10px; align-items: flex-end;">
+            <div style="flex: 1;">
+              <label style="display: block; font-size: 0.8rem; margin-bottom: 4px;">Nombre Canónico (Ej: Leche
+                Semidesnatada)</label>
+              <input type="text" id="canonicalNameInput"
+                style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px;">
+            </div>
+            <button class="btn-small" id="saveGroupBtn">Guardar Grupo</button>
+            <button class="btn-small" id="cancelGroupBtn" style="background: var(--text-muted);">Cancelar</button>
+          </div>
+          <div style="margin-top: 10px;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 4px;">Productos Vinculados:</label>
+            <div id="linkedProductsList" style="display: flex; flex-wrap: wrap; gap: 5px;"></div>
+          </div>
+        </div>
+
+        <!-- Auto Suggest Results -->
+        <div class="modal-footer" id="autoSuggestPanel"
+          style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 15px; display: none; max-height: 200px; overflow-y: auto;">
+          <h4 style="margin-bottom: 10px;">Sugerencias Encontradas <span id="suggestionCount" class="badge">0</span>
+          </h4>
+          <table style="width: 100%; text-align: left; font-size: 0.85rem;">
+            <thead>
+              <tr>
+                <th>Nombre A</th>
+                <th>Nombre B</th>
+                <th>Similitud</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="suggestionsTableBody"></tbody>
+          </table>
+          <button class="btn-small" id="closeSuggestBtn" style="margin-top: 10px; background: var(--text-muted);">Cerrar
+            Sugerencias</button>
+        </div>
+      </div>
+    </div>
 
     <!-- ==================== PRICE HISTORY TAB ==================== -->
     <section id="pricesTab" class="tab-content">
@@ -261,12 +348,42 @@
 
       <!-- Price Comparison -->
       <div class="chart-container">
-        <h3>Comparador de Precios entre Tiendas
-          <select id="comparisonProductSelect" class="inline-select"></select>
-        </h3>
+        <h3>Comparador de Productos (Selección Manual)</h3>
+        <p class="chart-subtitle">Selecciona tienda y producto para añadirlos a la tabla comparativa</p>
+
+        <div class="comparison-controls"
+          style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--bg-main); padding: 15px; border-radius: var(--border-radius-sm);">
+          <div class="control-group">
+            <label for="compStoreSelect"
+              style="font-size: 0.8rem; display: block; margin-bottom: 4px; color: var(--text-secondary);">1.
+              Tienda</label>
+            <select id="compStoreSelect" class="inline-select" style="margin: 0; min-width: 150px;">
+              <option value="">Cargando...</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="compProductSelect"
+              style="font-size: 0.8rem; display: block; margin-bottom: 4px; color: var(--text-secondary);">2.
+              Producto</label>
+            <select id="compProductSelect" class="inline-select" style="margin: 0; min-width: 250px;" disabled>
+              <option value="">Selecciona tienda primero</option>
+            </select>
+          </div>
+
+          <div class="control-group" style="display: flex; align-items: flex-end; height: 100%;">
+            <button id="addCompBtn" class="btn-small" style="margin-top: 20px;" disabled>+ Añadir</button>
+            <button id="clearCompBtn" class="btn-small"
+              style="margin-top: 20px; margin-left: 10px; background: var(--text-muted); display: none;">Limpiar</button>
+          </div>
+        </div>
+
         <div id="priceComparisonContainer">
-          <p style="text-align: center; color: var(--text-muted); padding: 40px;">Selecciona un producto para comparar
-            precios entre tiendas</p>
+          <div class="empty-state"
+            style="text-align: center; color: var(--text-muted); padding: 30px; border: 2px dashed var(--border-color); border-radius: var(--border-radius);">
+            <div style="font-size: 2rem; margin-bottom: 10px;">⚖️</div>
+            <p>Añade productos de diferentes tiendas para comparar sus precios lado a lado</p>
+          </div>
         </div>
       </div>
 

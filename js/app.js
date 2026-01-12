@@ -3,10 +3,12 @@
    ============================================ */
 
 // Global state
+// Global state
 let ticketsData = [];
 let currentYear = 'all';
 let currentStore = 'all';
 let fullData = null; // Complete data including categories
+let productMapping = {}; // Canonical name mapping: { "leche hacendado": "leche", "leche milbona": "leche" }
 
 // App version - increment to force cache clear
 const APP_VERSION = '2.1.0';
@@ -35,6 +37,7 @@ function clearAllData() {
     'shopping_year_filter',
     'shopping_store_filter',
     'shopping_budget',
+    'shopping_product_mapping',
     // Legacy keys
     'mercadona_tickets_data',
     'mercadona_active_tab',
@@ -92,7 +95,43 @@ async function init() {
   if (!hasData) {
     showDataLoaderModal();
   } else {
+    // Load mappings
+    try {
+      const savedMapping = localStorage.getItem('shopping_product_mapping');
+      if (savedMapping) {
+        productMapping = JSON.parse(savedMapping);
+        console.log(`Loaded ${Object.keys(productMapping).length} product aliases`);
+      }
+    } catch (e) {
+      console.warn('Error loading product mappings');
+    }
+
     startApp();
+  }
+}
+
+
+// Helper to get normalized/canonical name for a product
+function getNormalizedName(rawName) {
+  if (!rawName) return '';
+  const normalizedKey = rawName.toLowerCase().trim();
+  return productMapping[normalizedKey] || rawName;
+}
+
+// Helper to update product mapping
+function updateProductMapping(rawName, canonicalName) {
+  const key = rawName.toLowerCase().trim();
+  if (!canonicalName) {
+    delete productMapping[key];
+  } else {
+    productMapping[key] = canonicalName;
+  }
+
+  // Save to localStorage
+  try {
+    localStorage.setItem('shopping_product_mapping', JSON.stringify(productMapping));
+  } catch (e) {
+    console.warn('Could not save product mapping');
   }
 }
 
