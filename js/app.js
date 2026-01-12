@@ -548,6 +548,10 @@ async function handlePDFProcess() {
 
   if (files.length === 0) return;
 
+  // Reset input immediately so user can upload again without refreshing
+  // This must happen before any async operation
+  pdfInput.value = '';
+
   processBtn.disabled = true;
   progressEl.style.display = 'block';
 
@@ -626,8 +630,7 @@ async function handlePDFProcess() {
       startApp();
     }, 2000);
 
-    // Reset input
-    pdfInput.value = '';
+    // Update file list display (input already reset at start)
     updatePdfFileList([]);
 
   } catch (error) {

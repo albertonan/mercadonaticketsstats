@@ -13,5 +13,6 @@
 - [x] Migración de localStorage (mercadona -> shopping) <!-- 2026-01-12 -->
 - [x] Configurar OCR para imágenes (Tesseract.js) (2026-01-12)
 - [x] Crear parser para tickets de Lidl (2026-01-12)
+- [x] Corregir parser Lidl: Total, cantidades, descuentos, IVA, fecha, OCR <!-- 2026-01-12 -->
 - [x] Crea un readme.md con la descripccion y el diagrama (2026-01-12)
 - [x] Implementar comparador manual de productos (selección Tienda + Producto) (2026-01-12)

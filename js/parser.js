@@ -830,20 +830,39 @@ async function extractTextFromImage(file) {
 /**
  * Helper to sanitize OCR dates
  * Tries to find a valid date in the past/present
+ * For Lidl tickets, prioritizes the footer date format
  */
 function sanitizeOCRDate(text) {
   const now = new Date();
   const currentYear = now.getFullYear();
 
-  // Regex for multiple formats: DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY, DD.MM.YY
-  // Captured groups: 1=Day, 2=Month, 3=Year
+  // First, try to find Lidl-specific footer format: "5129   252456/05   08.09.24   15:25"
+  // Pattern: store number + transaction ID + DD.MM.YY + HH:MM
+  const lidlFooterMatch = text.match(/\d{4}\s+\d+\/\d+\s+(\d{2})\.(\d{2})\.(\d{2})\s+\d{2}:\d{2}/);
+  if (lidlFooterMatch) {
+    let d = parseInt(lidlFooterMatch[1]);
+    let m = parseInt(lidlFooterMatch[2]);
+    let y = parseInt(lidlFooterMatch[3]) + 2000;
+
+    if (m >= 1 && m <= 12 && d >= 1 && d <= 31 && y >= 2000 && y <= currentYear + 1) {
+      const checkDate = new Date(y, m - 1, d);
+      if (checkDate <= new Date(now.getTime() + 86400000)) {
+        return formatLocalDate(y, m, d);
+      }
+    }
+  }
+
+  // Fallback: Generic date patterns - collect ALL valid dates and return the LAST one
+  // (In receipts, the actual transaction date is usually at the bottom)
   const datePatterns = [
-    /(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/, // DD/MM/YYYY
-    /(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{2})\b/ // DD/MM/YY
+    /(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/g, // DD/MM/YYYY
+    /(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{2})\b/g // DD/MM/YY
   ];
 
+  let lastValidDate = null;
+
   for (const pattern of datePatterns) {
-    const matches = text.matchAll(new RegExp(pattern, 'g'));
+    const matches = [...text.matchAll(pattern)];
     for (const match of matches) {
       let d = parseInt(match[1]);
       let m = parseInt(match[2]);
@@ -855,47 +874,46 @@ function sanitizeOCRDate(text) {
       // Sanity check
       if (m < 1 || m > 12) continue;
       if (d < 1 || d > 31) continue;
-      if (y < 2000 || y > currentYear + 1) continue; // Allow +1 just in case of timezone/near year end, but generally strict
+      if (y < 2000 || y > currentYear + 1) continue;
 
       // If date is in future (significantly), reject
       const checkDate = new Date(y, m - 1, d);
-      if (checkDate > new Date(now.getTime() + 86400000)) continue; // Allow 1 day margin
+      if (checkDate > new Date(now.getTime() + 86400000)) continue;
 
-      return formatLocalDate(y, m, d);
+      // Keep this as a valid candidate (last one wins)
+      lastValidDate = formatLocalDate(y, m, d);
     }
   }
 
-  return null; // No valid date found
+  return lastValidDate; // Returns last valid date found, or null
 }
 
 /**
  * Helper to sanitize OCR prices
  * Fixes common issues like missing decimal points (600 -> 6.00)
+ * and OCR artifacts that create unrealistic prices
  */
 function sanitizeOCRPrice(rawPrice) {
   if (isNaN(rawPrice) || rawPrice <= 0) return 0;
-
-  // Heuristic: Grocery items are rarely > 50€ unit price
-  // If it looks like 60.95 for "Gnocchi", it's likely a misread 0.95 or 1.95?
-  // OR it could be 6095 -> 60.95 (which is still wrong) -> 6.09?
 
   // 1. Check for missing decimal in integers (e.g. 145 -> 1.45)
   if (rawPrice > 50 && Number.isInteger(rawPrice)) {
     return rawPrice / 100;
   }
 
-  // 2. High value handling
-  if (rawPrice > 50) {
-    // Extremely unlikely for a single grocery item to be > 50€ unless it's "Jamón" whole leg.
-    // But "Jamón ibérico cebo" in the example was 92.18, which might be real if it's a whole piece?
-    // However, "Gnocchi" at 60.95 is definitely wrong.
-
-    // If it's NOT a whole ham/shoulder/alcohol, cap it?
-    // Hard to know category here inside helper.
-
-    // Let's assume most items > 100 are wrong decimals
-    if (rawPrice > 100) return rawPrice / 100;
+  // 2. High value handling - most grocery items are < 50€
+  // Exception: whole hams, alcohol bottles, large packs
+  if (rawPrice > 100) {
+    // Almost certainly a missing decimal (e.g., 6089 -> 60.89 -> should be 6.089? or 60.89?)
+    // If > 100, divide by 100
+    return rawPrice / 100;
   }
+
+  // 3. Suspicious range 50-100€: Check if it looks like a misread
+  // Pattern: If the integer part is 2 digits and looks like "quantity + price" merged
+  // e.g., 60.89 could be "6" items at "0.89" or just wrong OCR
+  // We can't reliably fix this without more context, so we leave it but log a warning
+  // The total will still be correct from the TOTAL line
 
   return rawPrice;
 }
@@ -904,10 +922,15 @@ function sanitizeOCRPrice(rawPrice) {
  * Parse a Lidl ticket text (Improved for OCR)
  */
 function parseLidlTicket(text, filename) {
-  const lines = text.split('\n');
+  // Preprocess text to fix common OCR artifacts
+  // 1. Fix spaces inserted in prices: "2, 99" → "2,99" and "0. 89" → "0.89"
+  let cleanedText = text.replace(/(\d)[,\.]\s+(\d)/g, '$1,$2');
+  // 2. Normalize multiple spaces to single space (but preserve line structure)
+  cleanedText = cleanedText.replace(/[^\S\n]+/g, ' ');
+
+  const lines = cleanedText.split('\n');
 
   // 1. Find Date (Improved)
-  // Look for "Fecha" keyword first to be more accurate
   let dateStr = sanitizeOCRDate(text);
 
   if (!dateStr) {
@@ -918,83 +941,178 @@ function parseLidlTicket(text, filename) {
   let timeMatch = text.match(/(\d{2}:\d{2})/);
   let timeStr = timeMatch ? timeMatch[1] : "00:00";
 
-  // 2. Find Total
+  // 2. Find Total (Robust strategy)
+  // Look for multiple patterns and take the maximum valid one
   let total = 0;
-  // Look for TOTAL line more flexibly
-  // "TOTAL" followed by numbers, possibly with EUR/€, allows spaces inside number '23, 45'
-  const totalRegex = /TOTAL\s*(?:A PAGAR)?\s*(?:EUR|€)?.*?([\d\.,]+(?:[\s\.,]\d{2})?)/i;
-  const totalMatch = text.match(totalRegex);
 
-  if (totalMatch) {
-    // Clean up total string (remove internal spaces, fix dots/commas)
-    let cleanTotal = totalMatch[1].replace(/\s/g, '').replace(',', '.');
-    // If multiple dots, only keep last one? Standardize.
-    total = parseFloat(cleanTotal);
-    total = sanitizeOCRPrice(total);
+  // Pattern 1: "TOTAL" followed by price (handles spaces from OCR like "82, 00" or "82.00")
+  const totalPatterns = [
+    /TOTAL\s*(?:A\s*PAGAR)?\s*(?:EUR|€)?\s*(\d+[\s,\.]\s*\d{2})/gi,
+    /TOTAL\s*(?:A\s*PAGAR)?\s*(?:EUR|€)?\s*(\d+[\.,]\d{2})/gi,
+    /IMPORTE\s*(?:TOTAL)?\s*(\d+[\.,]\d{2})/gi
+  ];
+
+  let validTotals = [];
+  for (const pattern of totalPatterns) {
+    const matches = [...text.matchAll(pattern)];
+    for (const m of matches) {
+      // Clean: remove internal spaces, normalize comma to dot
+      let cleanVal = m[1].replace(/\s/g, '').replace(',', '.');
+      let val = parseFloat(cleanVal);
+      if (!isNaN(val) && val > 0) {
+        validTotals.push(val);
+      }
+    }
+  }
+
+  if (validTotals.length > 0) {
+    // Use the maximum value found (usually "TOTAL A PAGAR" is the final amount)
+    total = Math.max(...validTotals);
+    // Don't sanitize total - it's the real amount
   }
 
   // 3. Parse Items
   const items = [];
+  let discountTotal = 0;
 
-  // Lidl items: Description ... Price [TaxCode]
-  const itemRegex = /^(.+?)\s+(\d+[\.,]\d{2}|\d+)\s*[AB]?$/;
-
-  // STOP patterns: Once we see these, we likely left the items section
-  // "Suma", "Resto", "Entregado", "Tarjeta", "Cambio", Tax Summary lines (A %, B %), Footer phones
+  // STOP patterns: End of items section
   const stopPatterns = [
-    /^TOTAL/i, /^SUMA/i, /^RESTO/i, /^ENTREGADO/i, /^CAMBIO/i, /^TARJETA/i,
-    /^[A-Z]\s+\d+\s?%/i, // Tax lines: "B 10 %"
-    /IVA/i,
-    /^\d{4}\s+\d+\/\d+/ // Footer with store ID/date logic
+    /^TOTAL/i,
+    /^SUMA\b/i,
+    /^RESTO/i,
+    /^ENTREGADO/i,
+    /^CAMBIO/i,
+    /^TARJETA/i,
+    /^EFECTIVO/i,
+    /^\d{4}\s+\d+\/\d+/  // Footer with store ID
   ];
 
-  // SKIP patterns: Lines to ignore inside the block
-  const skipPatterns = [/LIDL/i, /TIENDA/i, /CLIENTE/i, /CAJERA/i];
+  // SKIP patterns: Lines to ignore but continue parsing after them
+  const skipPatterns = [
+    /LIDL/i,
+    /TIENDA/i,
+    /CLIENTE/i,
+    /CAJERA/i,
+    /^FECHA/i,
+    /^HORA/i,
+    /^FACTURA/i,
+    /^IVA\b/i,           // IVA lines - skip, don't stop
+    /^[A-Z]\s+\d+\s?%/i, // Tax summary lines: "B 10 %"
+    /^BASE\s*IMP/i,      // Base imponible
+    /^CUOTA/i            // Tax quota
+  ];
 
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i].trim();
     if (line.length < 3) continue;
 
-    // Check Stop Patterns
+    // Check Stop Patterns - end item parsing
     if (stopPatterns.some(p => p.test(line))) {
-      // If we found specific footer lines, likely done with items
-      // But continue checking just in case it's a false positive? 
-      // No, Lidl structure is usually sequential.
-      // Exception: "Suma" usually marks end of items before discounts/total.
       break;
     }
 
+    // Check Skip Patterns - ignore this line but continue
     if (skipPatterns.some(p => p.test(line))) continue;
 
-    // Ignore lines that are just dates/times (common OCR artifact repeating header)
-    if (/^\d{2}[\/\.-]\d{2}[\/\.-]\d{2,4}/.test(line) || /^\d{2}:\d{2}/.test(line)) continue;
+    // Ignore pure date/time lines
+    if (/^\d{2}[\/\.-]\d{2}[\/\.-]\d{2,4}/.test(line)) continue;
+    if (/^\d{2}:\d{2}/.test(line)) continue;
 
-    // Ignore lines that look like tax summary "A 10% 4.50"
-    if (/^[A-Z]\s+\d+%/.test(line)) continue;
+    // Check for discount lines (negative prices like "-0.50" or "Dto Lidl Plus Cupón -0,14")
+    // These are tracked but NOT added as individual items to avoid clutter
+    const discountMatch = line.match(/-\s*(\d+[\.,]\d{2})/);
+    if (discountMatch) {
+      const discountVal = parseFloat(discountMatch[1].replace(',', '.'));
+      discountTotal += discountVal;
+      // Skip adding individual discount lines - they're already reflected in the total
+      continue;
+    }
 
-    // Try detecting price at end of line
-    const lastNumMatch = line.match(/(\d+[\.,]?\d*)\s*[AB]?$/);
+    // Check for quantity format: "2x 0.79 1.58" or "2 x 0.79 1.58"
+    const qtyMatch = line.match(/^(.+?)\s+(\d+)\s*[xX×]\s*(\d+[\.,]\d{2})\s+(\d+[\.,]\d{2})\s*[A-Z]?$/);
+    if (qtyMatch) {
+      const name = qtyMatch[1].trim();
+      const qty = parseInt(qtyMatch[2]);
+      const unitPrice = parseFloat(qtyMatch[3].replace(',', '.'));
+      const totalPrice = parseFloat(qtyMatch[4].replace(',', '.'));
+
+      if (name.length >= 2 && qty > 0 && totalPrice > 0) {
+        items.push({
+          name: name,
+          price: sanitizeOCRPrice(totalPrice),
+          quantity: qty,
+          unitPrice: sanitizeOCRPrice(unitPrice),
+          category: categorizeProduct(name)
+        });
+        continue;
+      }
+    }
+
+    // Alternative quantity format: "Product 2,99x2 5,98" (price x qty = total)
+    const qtyMatch2 = line.match(/^(.+?)\s+(\d+[\.,]\d{2})\s*[xX×]\s*(\d+)\s+(\d+[\.,]\d{2})\s*[A-Z]?$/);
+    if (qtyMatch2) {
+      const name = qtyMatch2[1].trim();
+      const unitPrice = parseFloat(qtyMatch2[2].replace(',', '.'));
+      const qty = parseInt(qtyMatch2[3]);
+      const totalPrice = parseFloat(qtyMatch2[4].replace(',', '.'));
+
+      if (name.length >= 2 && qty > 0 && totalPrice > 0) {
+        items.push({
+          name: name,
+          price: sanitizeOCRPrice(totalPrice),
+          quantity: qty,
+          unitPrice: sanitizeOCRPrice(unitPrice),
+          category: categorizeProduct(name)
+        });
+        continue;
+      }
+    }
+
+    // Lidl format with spaces: "Product  1,99x   2     3,98 C" (spaces around qty)
+    const lidlQtyMatch = line.match(/^(.+?)\s+(\d+[\.,]\d{2})[xX×]\s+(\d+)\s+(\d+[\.,]\d{2})\s*[A-Z]?$/);
+    if (lidlQtyMatch) {
+      const name = lidlQtyMatch[1].trim();
+      const unitPrice = parseFloat(lidlQtyMatch[2].replace(',', '.'));
+      const qty = parseInt(lidlQtyMatch[3]);
+      const totalPrice = parseFloat(lidlQtyMatch[4].replace(',', '.'));
+
+      if (name.length >= 2 && qty > 0 && totalPrice > 0) {
+        items.push({
+          name: name,
+          price: sanitizeOCRPrice(totalPrice),
+          quantity: qty,
+          unitPrice: sanitizeOCRPrice(unitPrice),
+          category: categorizeProduct(name)
+        });
+        continue;
+      }
+    }
+
+    // Standard item: "Product name 1.25 A" (price at end, optional tax code A-Z)
+    const lastNumMatch = line.match(/(\d+[\.,]\d{2})\s*[A-Z]?$/);
+
     if (lastNumMatch) {
       const rawPriceStr = lastNumMatch[1];
       const rawPrice = parseFloat(rawPriceStr.replace(',', '.'));
-
-      // Sanity check price
       const price = sanitizeOCRPrice(rawPrice);
 
-      // Extract name part (everything before the price)
+      // Extract name (everything before the price)
       let name = line.substring(0, line.lastIndexOf(rawPriceStr)).trim();
 
-      // Cleanup name
-      name = name.replace(/[\d\.]+$/, '').trim(); // Remove trailing numbers/dots
-      if (name.length < 2) continue; // Too short
+      // Clean trailing garbage from name:
+      // 1. Remove trailing numbers/dots
+      name = name.replace(/[\d\.]+$/, '').trim();
+      // 2. Remove trailing price patterns stuck to name (e.g., "2,99x" or "0,75x")
+      name = name.replace(/\s+\d+[,\.]\d*[xX×]?\s*$/, '').trim();
+      // 3. Remove trailing "x" or quantity indicators
+      name = name.replace(/\s+\d*[xX×]\s*$/, '').trim();
+      // 4. Remove leading "-/" prefix (Lidl generic product placeholder)
+      name = name.replace(/^-\/\s*/, '').trim();
 
-      // Reject if name looks like a date/time or garbage
-      if (/^\d+$/.test(name)) continue; // Just numbers
-      if (name.includes('%') && name.length < 10) continue; // Short percentage line
+      if (name.length < 2) continue;
+      if (/^\d+$/.test(name)) continue;
+      if (name.includes('%') && name.length < 10) continue;
 
-      // If price is reasonable, add item
-      // Note: Allow expensive items for now, user can edit json if needed, 
-      // but > 200 is definitely blocked by sanitizeOCRPrice logic
       if (price > 0 && price < 200) {
         items.push({
           name: name,
@@ -1007,12 +1125,12 @@ function parseLidlTicket(text, filename) {
     }
   }
 
-  // If no total found but we have items, sum them up
+  // Fallback: if no total found but we have items, sum them up
   if (total === 0 && items.length > 0) {
     total = items.reduce((sum, item) => sum + item.price, 0);
   }
 
-  // Generate ID based on filename hash to allow re-importing same file correctly
+  // Generate stable ID based on filename hash
   const cleanFilename = filename.replace(/[^a-z0-9]/gi, '');
   const invoiceId = `LIDL-${dateStr.replace(/-/g, '')}-${Math.abs(cleanFilename.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0))}`;
 
