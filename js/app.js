@@ -8,7 +8,8 @@ let ticketsData = [];
 let currentYear = 'all';
 let currentStore = 'all';
 let fullData = null; // Complete data including categories
-let productMapping = {}; // Canonical name mapping: { "leche hacendado": "leche", "leche milbona": "leche" }
+let productMapping = {}; // Canonical name mapping: { "Canonical Name": ["alias 1", "alias 2"] }
+let productReverseMapping = {}; // Cache for fast lookup: { "alias 1": "Canonical Name" }
 
 // App version - increment to force cache clear
 const APP_VERSION = '2.2.0';
@@ -96,17 +97,48 @@ async function init() {
     showDataLoaderModal();
   } else {
     // Load mappings
+    // Load mappings
     if (fullData && fullData.productMapping) {
-      productMapping = fullData.productMapping;
-      console.log(`Loaded ${Object.keys(productMapping).length} product aliases from tickets data`);
+      let mapping = fullData.productMapping;
+
+      // AUTO-MIGRATION: Check if it's the old format (values are strings)
+      const isOldFormat = Object.values(mapping).some(v => typeof v === 'string');
+
+      if (isOldFormat) {
+        console.log("Migrating product mapping to new format (One-to-Many)...");
+        const newMapping = {};
+        for (const [alias, canonical] of Object.entries(mapping)) {
+          if (typeof canonical === 'string') {
+            if (!newMapping[canonical]) newMapping[canonical] = [];
+            newMapping[canonical].push(alias);
+          }
+        }
+        productMapping = newMapping;
+        // Trigger save
+        updateProductMapping("force_save", null);
+      } else {
+        productMapping = mapping;
+      }
+
+      rebuildReverseMapping();
+      console.log(`Loaded ${Object.keys(productMapping).length} product groups`);
+
     } else {
-      // Fallback to legacy separate key if exists, then migrate
+      // Fallback to legacy separate key...
       try {
         const savedMapping = localStorage.getItem('shopping_product_mapping');
         if (savedMapping) {
-          productMapping = JSON.parse(savedMapping);
-          console.log(`Loaded ${Object.keys(productMapping).length} product aliases from items (migrating...)`);
-          // We will save it into main data structure on next save
+          const oldMapping = JSON.parse(savedMapping);
+          // Migrate old mapping on the fly
+          const newMapping = {};
+          for (const [alias, canonical] of Object.entries(oldMapping)) {
+            if (!newMapping[canonical]) newMapping[canonical] = [];
+            newMapping[canonical].push(alias);
+          }
+          productMapping = newMapping;
+          rebuildReverseMapping();
+
+          console.log(`Loaded and migrated legacy product mappings`);
           updateProductMapping("force_save", null);
         }
       } catch (e) {
@@ -120,10 +152,24 @@ async function init() {
 
 
 // Helper to get normalized/canonical name for a product
+// Rebuild the reverse mapping cache (for fast lookup)
+function rebuildReverseMapping() {
+  productReverseMapping = {};
+  for (const [canonical, aliases] of Object.entries(productMapping)) {
+    if (Array.isArray(aliases)) {
+      aliases.forEach(alias => {
+        productReverseMapping[alias.toLowerCase().trim()] = canonical;
+      });
+    }
+  }
+}
+
+// Helper to get normalized/canonical name for a product
 function getNormalizedName(rawName) {
   if (!rawName) return '';
   const normalizedKey = rawName.toLowerCase().trim();
-  return productMapping[normalizedKey] || rawName;
+  // Check fast lookup cache
+  return productReverseMapping[normalizedKey] || rawName;
 }
 
 // Helper to update product mapping
@@ -131,12 +177,35 @@ function updateProductMapping(rawName, canonicalName) {
   if (rawName === "force_save") {
     // Just save
   } else {
-    const key = rawName.toLowerCase().trim();
-    if (!canonicalName) {
-      delete productMapping[key];
-    } else {
-      productMapping[key] = canonicalName;
+    const alias = rawName.toLowerCase().trim();
+
+    // 1. Remove from any existing group
+    for (const [group, aliases] of Object.entries(productMapping)) {
+      if (!Array.isArray(aliases)) continue;
+      const filtered = aliases.filter(a => a.toLowerCase().trim() !== alias);
+      if (filtered.length !== aliases.length) {
+        if (filtered.length === 0) {
+          delete productMapping[group]; // Remove empty group
+        } else {
+          productMapping[group] = filtered;
+        }
+      }
     }
+
+    // 2. Add to new group if specified
+    if (canonicalName) {
+      if (!productMapping[canonicalName]) {
+        productMapping[canonicalName] = [];
+      }
+      // Avoid duplicates
+      const exists = productMapping[canonicalName].some(a => a.toLowerCase().trim() === alias);
+      if (!exists) {
+        productMapping[canonicalName].push(rawName); // Store original raw name preferred
+      }
+    }
+
+    // 3. Update cache
+    rebuildReverseMapping();
   }
 
   // Update fullData
@@ -144,13 +213,11 @@ function updateProductMapping(rawName, canonicalName) {
     fullData.productMapping = productMapping;
   }
 
-  // Save to localStorage (main data)
+  // Save to localStorage
   try {
     if (fullData) {
       localStorage.setItem('shopping_tickets_data', JSON.stringify(fullData));
     }
-    // Remove legacy key if exists
-    localStorage.removeItem('shopping_product_mapping');
   } catch (e) {
     console.warn('Could not save product mapping');
   }

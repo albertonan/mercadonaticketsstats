@@ -257,15 +257,49 @@ function renderGroupingLists() {
 
   // 2. Separate into Mapped and Unmapped
   const unmapped = [];
-  const canonicalGroups = {}; // canonical -> [rawNames]
+  const canonicalGroups = productMapping; // New structure: canonical -> [aliases]
 
   allRawNames.forEach(raw => {
+    // Check if raw name is in any group (via reverse lookup)
     const normalized = getNormalizedName(raw);
-    if (normalized === raw && !productMapping[raw.toLowerCase()]) {
+
+    // If normalized name equals raw name, it implies no mapping found (unless it IS the canonical name itself)
+    // But with new structure, normalized is the Group Name.
+    // If raw name matches a Group Name, it might technically be "mapped" to itself if it's in the list?
+    // Actually getNormalizedName returns Key if found in ReverseMap.
+
+    // We want to list items that are NOT in any group yet.
+    // Use reverseMapping directly for check? No, rely on public helper.
+
+    // If raw is in a group, getNormalizedName returns the Group Name.
+    // If raw is NOT in a group, getNormalizedName returns raw.
+
+    if (normalized === raw && !canonicalGroups[raw]) {
+      // It's unmapped AND it is not a group name itself
       unmapped.push(raw);
+    }
+    // Note: If 'raw' IS the group name (e.g. "Leche"), it won't be in unmapped because canonicalGroups["Leche"] exists.
+    // But we should verify if "Leche" is INSIDE the list of "Leche"?
+    // The previous logic was simpler.
+
+    // Let's rely on: Is it in reverse map?
+    if (typeof productReverseMapping !== 'undefined') {
+      if (!productReverseMapping[raw.toLowerCase().trim()]) {
+        // Not an alias of anything
+        // Also check if it is a canonical key itself that hasn't self-referenced?
+        // Actually, if I create group "Leche", "Leche" usually isn't in the alias list unless explicit.
+        // But for visual purposes, "Leche" is the group.
+
+        // If this raw name matches an existing Group Key, don't show as unmapped, it's the header.
+        if (!canonicalGroups[raw]) {
+          unmapped.push(raw);
+        }
+      }
     } else {
-      if (!canonicalGroups[normalized]) canonicalGroups[normalized] = [];
-      canonicalGroups[normalized].push(raw);
+      // Fallback if reverse map not ready (shouldn't happen)
+      if (getNormalizedName(raw) === raw && !productMapping[raw]) {
+        unmapped.push(raw);
+      }
     }
   });
 
@@ -278,8 +312,8 @@ function renderGroupingLists() {
 
   // Render Canonical
   const canonicalContainer = document.getElementById('canonicalList');
-  canonicalContainer.innerHTML = Object.keys(canonicalGroups).sort().map(group => {
-    const count = canonicalGroups[group].length;
+  canonicalContainer.innerHTML = Object.entries(canonicalGroups).sort().map(([group, aliases]) => {
+    const count = aliases ? aliases.length : 0;
     const isSelected = selectedCanonical === group;
     return `
             <div class="group-item ${isSelected ? 'selected' : ''}" 
@@ -366,21 +400,9 @@ function openGroupEditor(canonicalName) {
   input.value = canonicalName;
 
   // Find linked products
-  const linked = [];
-  if (canonicalName) {
-    Object.entries(productMapping).forEach(([k, v]) => {
-      if (v === canonicalName) linked.push(k); // These are keys (lowercase), we might want original raw names?
-      // Actually keys are enough to show what's linked, or we search in ticketsData
-    });
-
-    // Better: Find raw names that map to this
-    const allRaw = new Set();
-    ticketsData.forEach(t => t.items?.forEach(i => allRaw.add(i.name)));
-    allRaw.forEach(raw => {
-      if (getNormalizedName(raw) === canonicalName && raw !== canonicalName) {
-        linked.push(raw);
-      }
-    });
+  let linked = [];
+  if (canonicalName && productMapping[canonicalName]) {
+    linked = [...productMapping[canonicalName]];
   }
 
   list.innerHTML = linked.map(l => `
@@ -398,10 +420,26 @@ function saveGroupEditor() {
   const newName = document.getElementById('canonicalNameInput').value.trim();
   if (!newName) return;
 
-  // If we had selected unmapped products, link them to this new name
+  // NOTE: If we are renaming a group, we need to move aliases.
+  // But editor doesn't track "old name", only "selectedCanonical" in scope if we trust it?
+  // We can infer it from context or we just create new group and let user delete old?
+  // For now the editor assumes we are "adding/modifying" the group specified by input.
+
+  // 1. Link selected unmapped products
   if (selectedUnmapped.size > 0) {
     selectedUnmapped.forEach(raw => updateProductMapping(raw, newName));
     selectedUnmapped.clear();
+  }
+
+  // 2. If 'selectedCanonical' was set and is different from newName, we might be renaming?
+  // User might expect "Renaming" the group moves ALL existing items.
+  if (selectedCanonical && selectedCanonical !== newName) {
+    // Move all aliases from old group to new
+    const oldAliases = productMapping[selectedCanonical] || [];
+    oldAliases.forEach(alias => updateProductMapping(alias, newName));
+    // Delete old group
+    delete productMapping[selectedCanonical];
+    updateProductMapping("force_save", null);
   }
 
   closeGroupEditor();
