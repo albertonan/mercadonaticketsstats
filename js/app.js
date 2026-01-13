@@ -362,317 +362,30 @@ function hideDataLoaderModal() {
 
 // Setup data loader event handlers
 function setupDataLoaderHandlers() {
-  const jsonInput = document.getElementById('jsonFileInput');
-  const pdfInput = document.getElementById('pdfFileInput');
-  const jsonDropzone = document.getElementById('jsonDropzone');
-  const pdfDropzone = document.getElementById('pdfDropzone');
-  const processBtn = document.getElementById('processPdfsBtn');
+  // Initialize Importers
+  initJSONImporter();
+  initFileImporter();
+
   const closeModalBtn = document.getElementById('closeModalBtn');
-  const jsonConfirmBtn = document.getElementById('jsonConfirmBtn');
   const jsonWarning = document.getElementById('jsonWarning');
 
   // Close modal button
   if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', () => {
+    // Cloning to remove old listeners
+    const newBtn = closeModalBtn.cloneNode(true);
+    closeModalBtn.parentNode.replaceChild(newBtn, closeModalBtn);
+    
+    newBtn.addEventListener('click', () => {
       hideDataLoaderModal();
-      pendingJSONFile = null;
+      if (typeof pendingJSONFile !== 'undefined') pendingJSONFile = null;
       if (jsonWarning) jsonWarning.style.display = 'none';
     });
   }
-
-  // JSON confirm button (accept replacement)
-  if (jsonConfirmBtn) {
-    jsonConfirmBtn.addEventListener('click', async () => {
-      if (pendingJSONFile) {
-        await processJSONFile(pendingJSONFile);
-        pendingJSONFile = null;
-      }
-    });
-  }
-
-  // JSON file input
-  if (jsonInput) {
-    jsonInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        await handleJSONUpload(file);
-      }
-    });
-  }
-
-  // PDF file input
-  if (pdfInput) {
-    pdfInput.addEventListener('change', (e) => {
-      updatePdfFileList(e.target.files);
-    });
-  }
-
-  // Process PDFs button
-  if (processBtn) {
-    processBtn.addEventListener('click', handlePDFProcess);
-  }
-
-  // Setup dropzones
-  setupDropzone(jsonDropzone, jsonInput, 'json');
-  setupDropzone(pdfDropzone, pdfInput, 'pdf');
 }
 
-// Setup drag and drop
-function setupDropzone(dropzone, input, type) {
-  if (!dropzone) return;
 
-  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
-    dropzone.addEventListener(event, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    });
-  });
 
-  ['dragenter', 'dragover'].forEach(event => {
-    dropzone.addEventListener(event, () => dropzone.classList.add('dragover'));
-  });
 
-  ['dragleave', 'drop'].forEach(event => {
-    dropzone.addEventListener(event, () => dropzone.classList.remove('dragover'));
-  });
-
-  dropzone.addEventListener('drop', async (e) => {
-    const files = e.dataTransfer.files;
-    if (type === 'json' && files.length > 0) {
-      await handleJSONUpload(files[0]);
-    } else if (type === 'pdf') {
-      // Merge with existing selection
-      const dt = new DataTransfer();
-      const existingFiles = document.getElementById('pdfFileInput').files;
-      for (const f of existingFiles) dt.items.add(f);
-      for (const f of files) {
-        if (f.type === 'application/pdf' || f.type.startsWith('image/')) dt.items.add(f);
-      }
-      document.getElementById('pdfFileInput').files = dt.files;
-      updatePdfFileList(dt.files);
-    }
-  });
-
-  dropzone.addEventListener('click', () => input?.click());
-}
-
-// Pending JSON file for confirmation
-let pendingJSONFile = null;
-
-// Handle JSON file upload
-async function handleJSONUpload(file) {
-  const status = document.getElementById('jsonStatus');
-  const warning = document.getElementById('jsonWarning');
-  const warningText = warning?.querySelector('.warning-text');
-
-  // Check if there are existing tickets and show warning
-  if (ticketsData && ticketsData.length > 0) {
-    pendingJSONFile = file;
-    if (warning && warningText) {
-      warningText.textContent = `Actualmente tienes ${ticketsData.length} tickets cargados. Subir este archivo JSON REEMPLAZARÁ todos los datos existentes.`;
-      warning.style.display = 'block';
-    }
-    return;
-  }
-
-  await processJSONFile(file);
-}
-
-// Process JSON file (after confirmation if needed)
-async function processJSONFile(file) {
-  const status = document.getElementById('jsonStatus');
-  const warning = document.getElementById('jsonWarning');
-
-  // Hide warning if visible
-  if (warning) warning.style.display = 'none';
-
-  try {
-    status.innerHTML = '<span class="loading-spinner"></span> Cargando...';
-
-    const text = await file.text();
-    const data = JSON.parse(text);
-
-    fullData = data;
-    ticketsData = data.tickets || data;
-
-    if (!ticketsData || ticketsData.length === 0) {
-      throw new Error('No se encontraron tickets en el archivo');
-    }
-
-    status.innerHTML = `<span class="success">${ticketsData.length} tickets cargados correctamente</span>`;
-
-    // Save to localStorage for persistence
-    try {
-      localStorage.setItem('shopping_tickets_data', JSON.stringify(fullData));
-    } catch (e) {
-      console.warn('Could not save to localStorage (data too large)');
-    }
-
-    setTimeout(() => {
-      hideDataLoaderModal();
-      startApp();
-    }, 1000);
-
-  } catch (error) {
-    status.innerHTML = `<span class="error">Error: ${error.message}</span>`;
-  }
-}
-
-// Update PDF file list display
-function updatePdfFileList(files) {
-  const listEl = document.getElementById('pdfFileList');
-  const processBtn = document.getElementById('processPdfsBtn');
-
-  if (files.length === 0) {
-    listEl.innerHTML = '<p class="text-muted">No hay archivos seleccionados</p>';
-    processBtn.disabled = true;
-    return;
-  }
-
-  listEl.innerHTML = `
-    <p><strong>${files.length} archivo(s) seleccionado(s):</strong></p>
-    <ul class="file-list">
-      ${Array.from(files).slice(0, 10).map(f => `<li>${f.name}</li>`).join('')}
-      ${files.length > 10 ? `<li>... y ${files.length - 10} más</li>` : ''}
-    </ul>
-  `;
-  processBtn.disabled = false;
-}
-
-// Handle File processing (PDFs and Images)
-async function handlePDFProcess() {
-  const pdfInput = document.getElementById('pdfFileInput');
-  const files = Array.from(pdfInput.files);
-  const progressEl = document.getElementById('pdfProgress');
-  const processBtn = document.getElementById('processPdfsBtn');
-
-  if (files.length === 0) return;
-
-  // Reset input immediately so user can upload again without refreshing
-  // This must happen before any async operation
-  pdfInput.value = '';
-
-  processBtn.disabled = true;
-  progressEl.style.display = 'block';
-
-  try {
-    const pdfFiles = files.filter(f => f.type === 'application/pdf');
-    const imageFiles = files.filter(f => f.type.startsWith('image/'));
-
-    let newTickets = [];
-
-    // Process PDFs
-    if (pdfFiles.length > 0) {
-      const pdfTickets = await processPDFs(pdfFiles, (current, total, filename) => {
-        const percent = Math.round((current / total) * 100);
-        progressEl.innerHTML = `
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${percent}%"></div>
-          </div>
-          <p>Procesando PDF ${current}/${total}: ${filename}</p>
-        `;
-      });
-      newTickets = newTickets.concat(pdfTickets);
-    }
-
-    // Process Images
-    if (imageFiles.length > 0) {
-      const imageTickets = await processImages(imageFiles, (current, total, filename) => {
-        const percent = Math.round((current / total) * 100);
-        progressEl.innerHTML = `
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${percent}%"></div>
-          </div>
-          <p>Procesando Imagen ${current}/${total}: ${filename}</p>
-        `;
-      });
-      newTickets = newTickets.concat(imageTickets);
-    }
-
-    if (newTickets.length === 0) {
-      throw new Error('No se pudieron extraer tickets de los archivos');
-    }
-
-    // Merge with existing tickets, avoiding duplicates
-    const existingTickets = ticketsData || [];
-    const mergedTickets = mergeTickets(existingTickets, newTickets);
-    const addedCount = mergedTickets.length - existingTickets.length;
-    const duplicateCount = newTickets.length - addedCount;
-
-    fullData = buildTicketsData(mergedTickets, productMapping); // Use global productMapping
-    ticketsData = mergedTickets;
-
-    let statusMsg = `${addedCount} tickets nuevos añadidos`;
-    if (duplicateCount > 0) {
-      statusMsg += ` (${duplicateCount} duplicados ignorados)`;
-    }
-    progressEl.innerHTML = `<span class="success">${statusMsg}</span>`;
-
-    // Save to localStorage
-    try {
-      localStorage.setItem('shopping_tickets_data', JSON.stringify(fullData));
-    } catch (e) {
-      console.warn('Could not save to localStorage (data too large)');
-    }
-
-    // Offer download
-    setTimeout(() => {
-      progressEl.innerHTML += `
-        <br><br>
-        <button class="btn btn-secondary" onclick="downloadGeneratedJSON()">
-          Descargar tickets.json
-        </button>
-      `;
-    }, 500);
-
-    setTimeout(() => {
-      hideDataLoaderModal();
-      startApp();
-    }, 2000);
-
-    // Update file list display (input already reset at start)
-    updatePdfFileList([]);
-
-  } catch (error) {
-    progressEl.innerHTML = `<span class="error">Error: ${error.message}</span>`;
-    processBtn.disabled = false;
-  }
-}
-
-// Merge tickets avoiding duplicates (by date + total + item count)
-function mergeTickets(existing, newTickets) {
-  const getTicketKey = (t) => `${t.date}_${t.total.toFixed(2)}_${(t.items || []).length}`;
-
-  const existingKeys = new Set(existing.map(getTicketKey));
-  const merged = [...existing];
-
-  for (const ticket of newTickets) {
-    const key = getTicketKey(ticket);
-    if (!existingKeys.has(key)) {
-      merged.push(ticket);
-      existingKeys.add(key);
-    }
-  }
-
-  // Sort by date descending
-  merged.sort((a, b) => b.date.localeCompare(a.date));
-
-  return merged;
-}
-
-// Download the generated JSON
-function downloadGeneratedJSON() {
-  if (!fullData) return;
-
-  const json = JSON.stringify(fullData, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'tickets.json';
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 // Get filtered tickets based on current filters
 function getFilteredTickets() {
@@ -830,31 +543,32 @@ function setupStoreFilter() {
   });
 }
 
-// Export functionality
+// Setup export functionality
 function setupExport() {
-  const btn = document.getElementById('exportBtn');
-  if (!btn) return;
-
-  btn.addEventListener('click', () => {
-    const tickets = getFilteredTickets();
-
-    // Prepare CSV
-    let csv = 'Fecha,Tienda,Total,Productos\n';
-    tickets.forEach(t => {
-      csv += `"${t.date}","${t.store || 'Mercadona'}",${t.total},"${(t.items || []).map(i => i.name).join('; ')}"\n`;
-    });
-
-    downloadFile(csv, `shopping_tickets_${currentYear}.csv`, 'text/csv');
-  });
+  // Currently handled by inline onclick in HTML
 }
 
-// Initialize on DOM ready
-document.addEventListener('DOMContentLoaded', init);
-
-// Also check URL hash on load
-if (window.location.hash) {
-  const tabFromHash = window.location.hash.substring(1);
-  if (['overview', 'categories', 'products', 'prices', 'tickets', 'insights'].includes(tabFromHash)) {
-    localStorage.setItem('shopping_active_tab', tabFromHash);
+// Download the current dataset as JSON
+function downloadGeneratedJSON() {
+  if (!ticketsData || ticketsData.length === 0) {
+    alert("No hay datos para exportar");
+    return;
   }
+  
+  const dataToSave = fullData || { tickets: ticketsData, productMapping: productMapping };
+  const jsonStr = JSON.stringify(dataToSave, null, 2);
+  const blob = new Blob([jsonStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tickets_data_${new Date().toISOString().slice(0, 10)}.json`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
+
+
+

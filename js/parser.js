@@ -1146,9 +1146,10 @@ function parseLidlTicket(text, filename) {
 
 /**
  * Process multiple Image files
+ * Returns array of { ticket, ocrText } for validation
  */
 async function processImages(files, progressCallback) {
-  const tickets = [];
+  const results = [];
   let processed = 0;
 
   for (const file of files) {
@@ -1174,7 +1175,12 @@ async function processImages(files, progressCallback) {
       }
 
       if (ticket) {
-        tickets.push(ticket);
+        // Return both ticket and OCR text for validation
+        results.push({
+          ticket: ticket,
+          ocrText: text,
+          filename: file.name
+        });
       }
 
       processed++;
@@ -1187,7 +1193,7 @@ async function processImages(files, progressCallback) {
     }
   }
 
-  return tickets;
+  return results;
 }
 
 /**
@@ -1198,3 +1204,4 @@ async function parseJSONFile(file) {
   const data = JSON.parse(text);
   return data.tickets || data;
 }
+

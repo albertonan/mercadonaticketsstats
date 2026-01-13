@@ -105,6 +105,52 @@ function downloadFile(content, filename, type) {
   URL.revokeObjectURL(url);
 }
 
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Setup drag and drop for inputs
+function setupDropzone(dropzone, input, type, onFileDrop) {
+  if (!dropzone) return;
+
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
+    dropzone.addEventListener(event, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+  });
+
+  ['dragenter', 'dragover'].forEach(event => {
+    dropzone.addEventListener(event, () => dropzone.classList.add('dragover'));
+  });
+
+  ['dragleave', 'drop'].forEach(event => {
+    dropzone.addEventListener(event, () => dropzone.classList.remove('dragover'));
+  });
+
+  dropzone.addEventListener('drop', async (e) => {
+    const files = e.dataTransfer.files;
+    if (onFileDrop) {
+      onFileDrop(files);
+    } else {
+      // Default behavior if no callback provided
+      if (type === 'json' && files.length > 0) {
+        // App logic would handle this
+        input.files = files; // Assign but doesn't trigger change?
+        // JSON Importer handles this usually
+      } else if (type === 'pdf') {
+         // File Importer handles this
+      }
+    }
+  });
+
+  dropzone.addEventListener('click', () => input?.click());
+}
+
 // Levenshtein distance for string similarity
 function levenshteinDistance(a, b) {
   if (a.length === 0) return b.length;

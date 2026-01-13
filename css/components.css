@@ -1148,4 +1148,317 @@ tr:hover {
   }
 }
 
+/* ========== TICKET VALIDATION MODAL ========== */
+.ticket-validation-modal {
+  background: rgba(0, 0, 0, 0.85);
+}
 
+.ticket-validation-modal .modal-content {
+  max-width: 900px;
+  width: 95%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: var(--bg-card);
+}
+
+.ticket-validation-modal .modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-elevated);
+}
+
+.ticket-validation-modal .modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.validation-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.ticket-validation-modal .modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ticket-validation-modal .modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-elevated);
+}
+
+/* Validation Header Info */
+.validation-header-info {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
+}
+
+.validation-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.validation-field label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.validation-input {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.9375rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.validation-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.validation-total {
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--primary);
+}
+
+/* Items Section */
+.validation-items-section {
+  margin-bottom: 20px;
+}
+
+.validation-items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.validation-items-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+}
+
+.validation-items-table-wrapper {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+}
+
+.validation-items-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.validation-items-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--bg-elevated);
+  z-index: 1;
+}
+
+.validation-items-table th {
+  padding: 12px;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.validation-items-table th:nth-child(2),
+.validation-items-table th:nth-child(3),
+.validation-items-table th:nth-child(4) {
+  text-align: right;
+  width: 100px;
+}
+
+.validation-items-table th:last-child {
+  width: 40px;
+}
+
+.validation-items-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.validation-items-table tbody tr:hover {
+  background: var(--bg-secondary);
+}
+
+.validation-items-table input[type="text"] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.validation-items-table input[type="number"] {
+  width: 80px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 0.875rem;
+  text-align: right;
+  color: var(--text-primary);
+}
+
+.validation-items-table input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--bg-card);
+}
+
+.validation-items-table input:hover {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+.validation-item-subtotal {
+  text-align: right;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  min-width: 70px;
+}
+
+.validation-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 1.125rem;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.validation-delete-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Items Summary */
+.validation-items-summary {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  font-size: 0.9375rem;
+}
+
+.validation-diff {
+  font-weight: 600;
+}
+
+.validation-diff.match {
+  color: var(--success);
+}
+
+.validation-diff.mismatch {
+  color: var(--danger);
+}
+
+/* OCR Details */
+.validation-ocr-details {
+  margin-top: 16px;
+}
+
+.validation-ocr-details summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: 8px 0;
+}
+
+.validation-ocr-details summary:hover {
+  color: var(--primary);
+}
+
+.validation-ocr-text {
+  margin-top: 8px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  font-family: monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-secondary);
+}
+
+/* Navigation & Actions */
+.validation-nav {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.validation-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .validation-header-info {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .ticket-validation-modal .modal-content {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .validation-header-info {
+    grid-template-columns: 1fr;
+  }
+
+  .validation-items-table th:nth-child(3) {
+    display: none;
+  }
+
+  .validation-items-table td:nth-child(3) {
+    display: none;
+  }
+}
