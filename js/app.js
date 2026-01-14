@@ -570,5 +570,8 @@ function downloadGeneratedJSON() {
   URL.revokeObjectURL(url);
 }
 
+// Start the application when DOM is ready
+document.addEventListener('DOMContentLoaded', init);
+
 
 

@@ -77,8 +77,12 @@ graph TD
 
 - `index.html`: Punto de entrada único de la aplicación.
 - `js/`: Lógica de la aplicación.
-  - `app.js`: Orquestador principal (estado, carga, router).
+  - `app.js`: Orquestador principal (estado, inicialización, router).
   - `parser.js`: Motor de extracción y categorización.
+  - `importers/`: Módulos de gestión de archivos.
+    - `file-importer.js`: Procesamiento de PDFs e Imágenes.
+    - `json-importer.js`: Importación de backups.
+    - `validation-modal.js`: UI para validar datos OCR.
   - `charts.js`: Configuraciones de Chart.js.
   - `tabs/*.js`: Lógica específica para cada pestaña de la interfaz.
 - `css/`: Estilos modulares (base, temas, componentes).
